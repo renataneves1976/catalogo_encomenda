@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -465,9 +465,7 @@
 
                 // 1. Link Lightbox (responsável pelo zoom/galeria)
                 const imageLink = document.createElement('a');
-                // Para o Lightbox, usamos o URL de conteúdo direto, mas podemos usar o URL de partilha 
-                // para que o utilizador possa clicar e ver no visualizador do Drive se o direto falhar,
-                // mas para manter a consistência e o funcionamento do zoom, usamos o realImageUrl.
+                // Para o Lightbox, usamos o URL de conteúdo direto, que deve funcionar
                 imageLink.href = realImageUrl; 
                 imageLink.setAttribute('data-lightbox', 'product-gallery'); // Agrupa todas as imagens numa galeria
                 // Usa formatPrice() no título da lightbox
