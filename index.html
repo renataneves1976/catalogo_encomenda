@@ -1,20 +1,25 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Artesanato Dinâmico</title>
-    <!-- Carregar Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Catálogo Estrela dos Desejos</title>
+    <!-- Carregar Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Fonte Inter para estética moderna */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
-            min-height: 10vh;
+            /* NOVO FUNDO DE NATAL */
+            background-image: url('https://img.cdndsgni.com/preview/13116737-m.jpg');
+            background-size: cover; /* Cobre toda a área */
+            background-position: center center; /* Centraliza a imagem */
+            background-repeat: no-repeat; /* Não repete a imagem */
+            background-attachment: fixed; /* O fundo permanece fixo ao scroll */
+            min-height: 100vh; /* Garante que o fundo preenche toda a altura */
         }
+
         /* Estilo para a caixa de mensagem personalizada */
         #messageBox {
             visibility: hidden;
@@ -58,7 +63,7 @@
             z-index: 50;
         }
 
-        /* Estilo para imagem de fallback quando o Drive falha */
+        /* Estilo para imagem de fallback */
         .image-fallback {
             display: flex;
             align-items: center;
@@ -73,15 +78,6 @@
             padding: 1rem;
         }
         
-        /* Ocultar scrollbar em elementos específicos */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-
         /* Estilo para o estado SELECIONADO do cartão */
         .product-card.selected {
             border: 3px solid #3b82f6; /* Borda azul */
@@ -89,12 +85,12 @@
             transform: scale(1.02);
         }
 
-        /* Estilo para o ícone de seleção */
+        /* Estilo para o ícone de seleção (PISCO) */
         .selection-icon {
             width: 36px;
             height: 36px;
             background-color: rgba(255, 255, 255, 0.9);
-            color: #9ca3af; /* Cinzento claro por defeito */
+            color: #9ca3af; 
             border: 2px solid #9ca3af;
             font-size: 20px;
             font-weight: bold;
@@ -104,7 +100,7 @@
             cursor: pointer;
             transition: all 0.2s;
             border-radius: 50%;
-            line-height: 1; /* Para alinhar o conteúdo */
+            line-height: 1; 
         }
         .selection-icon.selected {
             background-color: #3b82f6; /* Azul no estado selecionado */
@@ -118,19 +114,16 @@
 </head>
 <body class="bg-gray-50">
 
-    <!-- Modal Lightbox (PRÉ-VISUALIZAÇÃO SIMPLIFICADA) -->
-    <div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
+    <!-- Modal Lightbox (PRÉ-VISUALIZAÇÃO SIMPLIFICADA) --><div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
         <div class="relative bg-white p-6 rounded-lg max-w-4xl max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
             <button class="absolute top-2 right-2 text-xl font-bold text-gray-700 hover:text-red-500 transition" onclick="closeLightbox()">
                 &times;
             </button>
             <div class="flex flex-col items-center justify-center">
-                <!-- Imagem -->
-                <div class="w-full max-w-lg flex items-center justify-center p-2 mb-4">
+                <!-- Imagem --><div class="w-full max-w-lg flex items-center justify-center p-2 mb-4">
                     <img id="lightboxImage" src="" alt="Produto em destaque" class="max-h-[70vh] w-auto object-contain rounded-lg shadow-md">
                 </div>
-                <!-- Detalhes -->
-                <div class="text-center p-4">
+                <!-- Detalhes --><div class="text-center p-4">
                     <h2 id="lightboxName" class="text-3xl font-extrabold text-gray-800 mb-2"></h2>
                     <p class="text-xl text-green-600 font-bold">
                         <span id="lightboxPrice"></span>
@@ -140,13 +133,12 @@
         </div>
     </div>
 
-    <!-- Barra de Mensagem (Toast) -->
-    <div id="messageBox"></div>
+    <!-- Barra de Mensagem (Toast) --><div id="messageBox"></div>
 
-    <!-- Header e Carrinho -->
-    <header class="bg-white shadow-md sticky top-0 z-40">
+    <!-- Header e Carrinho --><header class="bg-white shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-black text-indigo-600">Artesanato Local</h1>
+            <!-- Título Atualizado --><h1 class="text-2xl font-black text-indigo-600">Estrela dos Desejos</h1>
+            
             <button id="viewOrderForm" class="relative bg-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-600 transition duration-300 shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.542 12 5.5 12h12.25a.25.25 0 00.25-.25v-1.5a.25.25 0 00-.25-.25H5.5c-.138 0-.25-.112-.25-.25v-1.125c0-.138.112-.25.25-.25h11.493a2.25 2.25 0 002.146-1.588L18.49 5.86a2.25 2.25 0 00-2.146-1.588H6.295c-1.071 0-2.074.521-2.673 1.353z" />
@@ -158,13 +150,11 @@
         </div>
     </header>
 
-    <main id="appContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Secção do Catálogo -->
-        <section id="catalogueSection">
+    <!-- O conteúdo principal (catálogo/formulário) terá um fundo branco translúcido para visibilidade --><main id="appContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white/90 rounded-xl shadow-inner my-8">
+        <!-- Secção do Catálogo --><section id="catalogueSection">
             <h2 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">O Nosso Catálogo de Produtos Únicos</h2>
             
-            <!-- Mensagem de erro/loading -->
-            <p id="loadingMessage" class="text-center text-xl text-gray-600 p-10">
+            <!-- Mensagem de erro/loading --><p id="loadingMessage" class="text-center text-xl text-gray-600 p-10">
                 A carregar produtos...
             </p>
             <p id="errorMessage" class="hidden text-center text-xl text-red-600 p-10 font-medium bg-red-100 rounded-lg border border-red-300">
@@ -173,14 +163,11 @@
                 <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2"></span>
             </p>
 
-            <!-- Grelha do Catálogo -->
-            <div id="productGallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <!-- Produtos serão injetados aqui pelo JavaScript -->
-            </div>
+            <!-- Grelha do Catálogo --><div id="productGallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Produtos serão injetados aqui pelo JavaScript --></div>
         </section>
 
-        <!-- Secção do Formulário de Encomenda -->
-        <section id="orderSection" class="hidden max-w-4xl mx-auto mt-12 bg-white p-8 rounded-xl shadow-2xl">
+        <!-- Secção do Formulário de Encomenda --><section id="orderSection" class="hidden max-w-4xl mx-auto mt-12 bg-white p-8 rounded-xl shadow-2xl">
             <button id="backToCatalogue" class="text-indigo-600 hover:text-indigo-800 font-medium mb-4 flex items-center transition duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -194,49 +181,36 @@
                 <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
                     <h3 class="text-lg font-bold text-indigo-700 mb-2">Resumo da Seleção</h3>
                     <div id="selectedProductsSummary" class="text-sm text-indigo-800 space-y-1">
-                        <!-- Resumo dos produtos selecionados -->
-                    </div>
+                        <!-- Resumo dos produtos selecionados --></div>
                     <input type="hidden" id="produtosSelecionadosInput" name="produtos_selecionados" required>
                 </div>
 
-                <!-- Campo Nome -->
-                <div>
+                <!-- Campo Nome --><div>
                     <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo <span class="text-red-500">*</span></label>
                     <input type="text" id="nome" name="nome" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
                 </div>
 
-                <!-- Campo Email -->
-                <div>
+                <!-- Campo Email --><div>
                     <label for="email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
                     <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
                 </div>
 
-                <!-- Campo Contacto -->
-                <div>
+                <!-- Campo Contacto --><div>
                     <label for="contacto" class="block text-sm font-medium text-gray-700">Contacto Telefónico <span class="text-red-500">*</span></label>
                     <input type="tel" id="contacto" name="contacto" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
                 </div>
 
-                <!-- Campo Quantidade (Adicionado para submissão, mas o input principal vem do JS) -->
-                <div>
+                <!-- Campo Quantidade --><div>
                     <label for="quantidade" class="block text-sm font-medium text-gray-700">Quantidade Total de Itens <span class="text-red-500">*</span></label>
                     <input type="number" id="quantidade" name="quantidade" required readonly class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm bg-gray-100 p-3 border" value="0">
                 </div>
 
-                <!-- Campo Data Preferida -->
-                <div>
-                    <label for="data_preferida" class="block text-sm font-medium text-gray-700">Data Preferida para Entrega (Opcional)</label>
-                    <input type="date" id="data_preferida" name="data_preferida" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
-                </div>
-
-                <!-- Campo Mensagem -->
-                <div>
+                <!-- Campo Mensagem --><div>
                     <label for="mensagem" class="block text-sm font-medium text-gray-700">Mensagem/Instruções Especiais</label>
                     <textarea id="mensagem" name="mensagem" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border"></textarea>
                 </div>
 
-                <!-- Botão de Submissão -->
-                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-gray-400" id="submitButton">
+                <!-- Botão de Submissão --><button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-gray-400" id="submitButton">
                     Finalizar Encomenda e Enviar Pedido
                 </button>
             </form>
@@ -293,21 +267,11 @@
         }
 
         /**
-         * Tenta converter um URL de partilha do Google Drive para um URL de conteúdo direto.
-         * @param {string} url - O URL original do Google Drive.
-         * @returns {string} O URL direto ou o URL original se a conversão falhar.
+         * Simplesmente devolve o URL. Assumimos que o URL do Flickr/CDN é direto e válido para a tag <img>.
+         * @param {string} url - O URL do arquivo de imagem.
+         * @returns {string} O URL inalterado.
          */
-        function getDirectDriveUrl(url) {
-            if (!url || typeof url !== 'string') return url;
-            
-            const regex = /(?:https?:\/\/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/;
-            const match = url.match(regex);
-
-            if (match && match[1]) {
-                const fileId = match[1];
-                return `https://drive.google.com/uc?export=view&id=${fileId}`;
-            }
-            
+        function getDirectImageUrl(url) {
             return url;
         }
 
@@ -321,20 +285,22 @@
             const isSelected = (cart[index] || 0) > 0;
 
             if (cardElement) {
+                // Adiciona ou remove a classe 'selected' para a borda visual
                 cardElement.classList.toggle('selected', isSelected);
             }
 
             if (iconElement) {
+                // Adiciona ou remove a classe 'selected' para a cor do ícone
                 iconElement.classList.toggle('selected', isSelected);
+                // Altera o SVG do ícone
                 iconElement.innerHTML = isSelected 
-                    ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polyline points="20 6 9 17 4 12"></polyline></svg>` // Ícone de verificação (pisco)
-                    : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`; // Ícone de adição (+)
+                            ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polyline points="20 6 9 17 4 12"></polyline></svg>` 
+                            : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
             }
         }
 
         /**
          * Atualiza a exibição da contagem do carrinho e o resumo do formulário.
-         * Chama updateCardState para refrescar o visual dos cartões.
          */
         function updateCartDisplay() {
             let totalCount = 0;
@@ -394,16 +360,18 @@
             const product = productCatalogue[productIndex];
             if (!product) return;
 
-            elements.lightboxImage.src = getDirectDriveUrl(product.ImageFile);
+            // Usa o URL do Flickr/CDN diretamente
+            const imageUrl = getDirectImageUrl(product.ImageFile);
+
+            elements.lightboxImage.src = imageUrl;
+            // Define a imagem de fallback em caso de erro de carregamento (URL inválido)
             elements.lightboxImage.onerror = () => {
                  elements.lightboxImage.classList.add('image-fallback');
-                 elements.lightboxImage.src = "https://placehold.co/400x300/e0e0e0/777?text=Imagem+Drive+Indisponível";
+                 elements.lightboxImage.src = "https://placehold.co/400x300/e0e0e0/777?text=Imagem+Indisponível";
             };
             elements.lightboxName.textContent = product.Name;
             elements.lightboxPrice.textContent = `${parseFloat(product.Price).toFixed(2)} €`;
             
-            // SIMPLIFICADO: Não há botão de adicionar, é apenas pré-visualização.
-
             elements.lightboxOverlay.style.display = 'flex';
         }
 
@@ -428,11 +396,11 @@
             }
 
             products.forEach((product, index) => {
-                const imageUrl = getDirectDriveUrl(product.ImageFile);
+                // Usa o URL do Flickr/CDN diretamente
+                const imageUrl = getDirectImageUrl(product.ImageFile);
                 
                 const card = document.createElement('div');
                 card.id = `product-card-${index}`;
-                // Classe 'selected' será adicionada/removida dinamicamente
                 card.className = 'product-card bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1 overflow-hidden cursor-pointer flex flex-col relative border-2 border-transparent';
                 
                 // Clicar no cartão abre apenas a pré-visualização (Lightbox)
@@ -453,17 +421,16 @@
                     <div class="h-48 relative overflow-hidden">
                         <img src="${imageUrl}" alt="${product.Name}" 
                              class="w-full h-full object-cover transition duration-300 hover:scale-105" 
-                             onerror="this.onerror=null; this.src='https://placehold.co/400x300/e0e0e0/777?text=Imagem+Drive+Indisponível'; this.parentElement.classList.add('image-fallback');">
+                             onerror="this.onerror=null; this.src='https://placehold.co/400x300/e0e0e0/777?text=Imagem+Indisponível'; this.parentElement.classList.add('image-fallback');">
                     </div>
                     <div class="p-4 flex-grow flex flex-col">
                         <h3 class="text-xl font-bold text-gray-800 mb-1">${product.Name}</h3>
                         <p class="text-2xl font-extrabold text-green-600 mt-auto">${parseFloat(product.Price).toFixed(2)} €</p>
-                        <!-- Botão de adicionar removido; a seleção é feita pelo ícone no canto -->
                     </div>
                 `;
                 elements.gallery.appendChild(card);
                 
-                // Aplica o estado inicial, caso já existam itens no carrinho (após um refresh, por exemplo)
+                // Aplica o estado inicial, caso já existam itens no carrinho
                 updateCardState(index);
             });
         }
@@ -504,7 +471,7 @@
                     <br>
                     **Erro:** ${error.message}
                     <br>
-                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique se a nova URL foi implantada corretamente e se as permissões da folha de cálculo estão corretas.</span>
+                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique se o Apps Script está devolvendo o JSON correto com os novos URLs de imagem.</span>
                 `;
                 elements.gallery.innerHTML = '';
             } finally {
@@ -520,6 +487,7 @@
             elements.submitButton.disabled = true;
             elements.submitButton.textContent = 'A Enviar...';
 
+            // ATENÇÃO: Os dados do formulário não incluem mais 'data_preferida'
             const formData = new FormData(elements.orderForm);
             
             try {
