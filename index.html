@@ -1,4 +1,4 @@
-
+ <!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -122,6 +122,7 @@
             <h2 class="text-3xl sm:text-4xl font-bold mb-4 sm:mb-8 text-center text-gray-800">Nosso Catálogo de Produtos</h2>
             <p class="text-center text-gray-600 mb-8 sm:mb-12 text-sm sm:text-base">
                 Clique na imagem para ver em detalhe ou use o pisco (<span class="font-bold text-purple-600">✓</span>) para adicionar ao seu pedido.
+                <br><span class="text-xs text-gray-400">Suporta links de partilha pública do Google Drive (ex: .../view?usp=drive_link).</span>
             </p>
 
             <!-- Loading Spinner enquanto carrega o catálogo -->
@@ -250,6 +251,33 @@
 
 
         // --- FUNÇÕES DE UTILITY ---
+
+        /**
+         * FUNÇÃO CRÍTICA PARA SUPORTE AO GOOGLE DRIVE.
+         * Converte um URL de partilha pública do Google Drive (e.g., /view?usp=drive_link)
+         * para um URL de conteúdo direto (e.g., /uc?export=view&id=FILE_ID) que pode
+         * ser usado numa tag <img>. Se não for um URL do Drive, retorna o URL original.
+         * * @param {string} sharedUrl - O URL fornecido na folha de cálculo.
+         * @returns {string} O URL direto para o conteúdo da imagem.
+         */
+        function getDirectDriveUrl(sharedUrl) {
+            if (!sharedUrl || typeof sharedUrl !== 'string') {
+                return '';
+            }
+            
+            // Tenta extrair o ID do ficheiro a partir de um URL de partilha padrão
+            // (e.g., https://drive.google.com/file/d/FILE_ID/view...)
+            const match = sharedUrl.match(/\/d\/([a-zA-Z0-9_-]+)\/view/);
+
+            if (match && match[1]) {
+                const fileId = match[1];
+                // Formato para acesso direto ao conteúdo
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+            }
+
+            // Se for um URL não-Drive (e.g., Imgur, website direto), ou já for um URL /uc, retorna-o.
+            return sharedUrl; 
+        }
 
         /**
          * Formata uma string de preço para o formato monetário Euro (pt-PT).
@@ -428,14 +456,19 @@
                     isSelected ? 'selected' : 'border-transparent' // Define o estado inicial da borda
                 );
                 
-                // O `realImageUrl` agora usa o nome do ficheiro da folha
-                const imageFilename = product.imageFile;
-                const realImageUrl = `./${imageFilename}`;
+                // O `imageFile` é o URL de partilha do Drive ou URL direto de outra fonte.
+                const sharedOrDirectUrl = product.imageFile;
+                // Usa a nova função para obter o URL de conteúdo direto
+                const realImageUrl = getDirectDriveUrl(sharedOrDirectUrl); 
+                
                 const placeholderUrl = `https://placehold.co/150x150/a78bfa/ffffff?text=${product.name}`;
 
                 // 1. Link Lightbox (responsável pelo zoom/galeria)
                 const imageLink = document.createElement('a');
-                imageLink.href = realImageUrl;
+                // Para o Lightbox, usamos o URL de conteúdo direto, mas podemos usar o URL de partilha 
+                // para que o utilizador possa clicar e ver no visualizador do Drive se o direto falhar,
+                // mas para manter a consistência e o funcionamento do zoom, usamos o realImageUrl.
+                imageLink.href = realImageUrl; 
                 imageLink.setAttribute('data-lightbox', 'product-gallery'); // Agrupa todas as imagens numa galeria
                 // Usa formatPrice() no título da lightbox
                 imageLink.setAttribute('data-title', `${product.name} - ${formatPrice(product.price)}`);
@@ -477,7 +510,7 @@
                 `;
                 // Se estiver selecionado, garantimos que o ícone está visível
                 if (isSelected) {
-                    tickContainer.querySelector('.selection-tick-icon').classList.remove('opacity-0');
+                    tickContainer.classList.remove('opacity-0');
                 } else {
                     tickContainer.querySelector('.selection-tick-icon').classList.add('opacity-0');
                 }
@@ -529,6 +562,7 @@
          * Atualiza a contagem de produtos selecionados no botão.
          */
         function updateSelectionCount() {
+            proceedToOrderButton.disabled = selectedProductIds.size === 0;
             selectedCountSpan.textContent = selectedProductIds.size;
         }
 
@@ -640,7 +674,7 @@
         window.onload = () => {
             orderForm.addEventListener('submit', submitOrder);
             showPage('catalogue'); 
-            fetchProducts(); // CHAMA A NOVA FUNÇÃO PARA CARREGAR DADOS
+            fetchProducts(); // CHAMA A FUNÇÃO PARA CARREGAR DADOS
 
             // Configuração do Lightbox (para garantir que funciona corretamente)
             lightbox.option({
