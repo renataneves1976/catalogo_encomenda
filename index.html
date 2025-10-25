@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo Artesanato Dinâmico</title>
-    <!-- Carregar Tailwind CSS (URL CORRIGIDO) -->
+    <!-- Carregar Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Fonte Inter para estética moderna (URL CORRIGIDO) */
+        /* Fonte Inter para estética moderna */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         
         body {
@@ -109,7 +109,8 @@
                         </p>
                     </div>
                     
-                    <button id="lightboxAddToCart" data-product-id="" class="w-full bg-indigo-600 text-white py-3 mt-4 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] shadow-lg">
+                    <button id="lightboxAddToCart" data-product-id="" class="w-full bg-indigo-600 text-white py-3 mt-4 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] shadow-lg"
+                            onclick="event.stopPropagation();">
                         Adicionar ao Carrinho
                     </button>
                 </div>
@@ -221,7 +222,8 @@
     </main>
 
     <script>
-        // Configurações e Estado (ATUALIZE O URL AQUI)
+        // Configurações e Estado 
+        // URL ATUALIZADA COM O LINK FORNECIDO PELO UTILIZADOR (URL limpa /exec)
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwg7grb8NkIcVqB3hb2npNwPnGrRHfHqfe_vYlKGFmqKWpr9fOmEs2R7FIiQ1GIpNd2g/exec";
         
         let productCatalogue = []; // Armazena todos os produtos carregados
@@ -360,7 +362,10 @@
             };
             elements.lightboxName.textContent = product.Name;
             elements.lightboxPrice.textContent = `${parseFloat(product.Price).toFixed(2)} €`;
-            elements.lightboxAddToCart.onclick = () => {
+            
+            // Define o que acontece ao clicar no botão do carrinho no Lightbox
+            elements.lightboxAddToCart.onclick = (e) => {
+                e.stopPropagation(); // Previne que o clique feche o lightbox
                 updateCart(productIndex, 1);
                 closeLightbox();
             };
@@ -418,6 +423,7 @@
 
         /**
          * Faz a chamada GET à Apps Script para obter a lista de produtos.
+         * ESTA FUNÇÃO GARANTE QUE O PARÂMETRO 'ACTION=GETPRODUCTS' É ENVIADO.
          */
         async function fetchCatalogue() {
             elements.loadingMessage.classList.remove('hidden');
@@ -425,15 +431,18 @@
             elements.scriptUrlDisplay.textContent = `A URL de serviço atual é: ${GOOGLE_APPS_SCRIPT_URL}`;
 
             try {
-                // Adiciona a ação correta para o doGet no Apps Script
-                const apiUrl = `${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`;
+                // ANEXA O PARÂMETRO DE AÇÃO USANDO O SEPARADOR '?' (CORRIGIDO PARA O URL /exec)
+                const finalApiUrl = `${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`;
+
+                console.log("A solicitar catálogo na URL:", finalApiUrl); // Log para depuração
                 
-                const response = await fetch(apiUrl);
+                const response = await fetch(finalApiUrl);
 
                 if (!response.ok) {
                     throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
                 }
 
+                // O script deve retornar JSON, por isso chamamos response.json()
                 const data = await response.json();
                 
                 if (data.result === 'error') {
@@ -451,7 +460,7 @@
                     <br>
                     **Erro:** ${error.message}
                     <br>
-                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique as permissões e o ID da folha de cálculo no seu Apps Script. URL: ${GOOGLE_APPS_SCRIPT_URL}</span>
+                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique se a nova URL foi implantada corretamente e se as permissões da folha de cálculo estão corretas.</span>
                 `;
                 elements.gallery.innerHTML = '';
             } finally {
@@ -470,16 +479,14 @@
             const formData = new FormData(elements.orderForm);
             
             try {
+                // Para POST, usamos o URL base (o script Apps é inteligente o suficiente para saber que é um POST)
                 const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: formData,
-                    // O modo 'no-cors' é muitas vezes necessário para submissões Apps Script
+                    // O modo 'no-cors' é necessário para submissões Apps Script
                     mode: 'no-cors' 
                 });
 
-                // Como usamos no-cors, a verificação response.ok falha. 
-                // Assumimos o sucesso e dependemos da Google Sheet para confirmar.
-                
                 // Simulação de resposta de sucesso após submissão no-cors
                 showMessage("Encomenda submetida com sucesso! Verifique o registo na sua Google Sheet.", 'success');
                 
