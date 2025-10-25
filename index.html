@@ -222,7 +222,7 @@
     
     <script>
         // =========================================================================
-        // *** CONFIGURAÇÃO CRÍTICA: URL DO NOVO APPS SCRIPT ***
+        // *** CONFIGURAÇÃO CRÍTICA: URL DO APPS SCRIPT ***
         // =========================================================================
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjhjXggGt_e1CIpKv1ok3GPmzWbW0YzethjdGQHeRke6D5q8jln_1KTQhLOtQF5X5Scw/exec"; 
 
@@ -330,8 +330,8 @@
          */
         async function fetchProducts() {
             if (GOOGLE_APPS_SCRIPT_URL.includes("URL_DO_NOVO_APPS_SCRIPT_AQUI")) {
-                 console.error("ERRO CRÍTICO: Por favor, substitua 'URL_DO_NOVO_APPS_SCRIPT_AQUI' pela sua URL de implementação do Apps Script.");
-                 catalogueError.innerHTML = '<p>ERRO: URL do Apps Script não configurada.</p><p class="text-sm text-gray-500 mt-2">Por favor, implemente o Code.gs e atualize a variável GOOGLE_APPS_SCRIPT_URL neste ficheiro.</p>';
+                 console.error("ERRO CRÍTICO: Por favor, implemente o Code.gs e atualize a variável GOOGLE_APPS_SCRIPT_URL neste ficheiro.");
+                 catalogueError.innerHTML = '<p>ERRO: URL do Apps Script não configurada.</p><p class="text-sm text-gray-500 mt-2">Por favor, verifique a constante GOOGLE_APPS_SCRIPT_URL no código fonte.</p>';
                  catalogueError.classList.remove('hidden');
                  catalogueLoading.classList.add('hidden');
                  return;
