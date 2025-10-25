@@ -268,15 +268,25 @@
             // Tenta extrair o ID do ficheiro a partir de um URL de partilha padrão
             // (e.g., https://drive.google.com/file/d/FILE_ID/view...)
             const match = sharedUrl.match(/\/d\/([a-zA-Z0-9_-]+)\/view/);
+            
+            let realUrl = sharedUrl;
 
             if (match && match[1]) {
                 const fileId = match[1];
                 // Formato para acesso direto ao conteúdo
-                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                realUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
             }
 
-            // Se for um URL não-Drive (e.g., Imgur, website direto), ou já for um URL /uc, retorna-o.
-            return sharedUrl; 
+            // --- DEBUG LOG ---
+            // Adiciona uma mensagem de debug específica se o URL contiver o ID de teste
+            if (sharedUrl.includes('1zhql-WUE6uXddOMEZ1qyU3SiFtXtP4g')) {
+                console.log(`[DEBUG DRIVE] URL Original (Folha): ${sharedUrl}`);
+                console.log(`[DEBUG DRIVE] ID Encontrado: ${match ? match[1] : 'NÃO ENCONTRADO'}`);
+                console.log(`[DEBUG DRIVE] URL Final Gerado: ${realUrl}`);
+            }
+            // -----------------
+
+            return realUrl; 
         }
 
         /**
@@ -364,6 +374,9 @@
                         result = await response.json();
                         if (result.result === 'success' && result.products) {
                             allProducts = result.products;
+                            // --- DEBUG LOG ---
+                            console.log("[DEBUG FETCH] Catálogo Carregado com Sucesso:", allProducts);
+                            // -----------------
                             return; // Sai se for bem-sucedido
                         } else {
                             // Erro de lógica na Apps Script, mas a comunicação funcionou
@@ -461,6 +474,7 @@
                 // Usa a nova função para obter o URL de conteúdo direto
                 const realImageUrl = getDirectDriveUrl(sharedOrDirectUrl); 
                 
+                // Imagem de substituição se a imagem principal falhar
                 const placeholderUrl = `https://placehold.co/150x150/a78bfa/ffffff?text=${product.name}`;
 
                 // 1. Link Lightbox (responsável pelo zoom/galeria)
