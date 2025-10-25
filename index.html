@@ -1,33 +1,529 @@
-<!DOCTYPE html>
-<html lang="pt">
+
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artesanato Natalício - Catálogo</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Catálogo Artesanato Dinâmico</title>
+    <!-- Carregar Tailwind CSS (URL CORRIGIDO) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Fonte Inter para estética moderna (URL CORRIGIDO) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            min-height: 10vh;
+        }
+        /* Estilo para a caixa de mensagem personalizada */
+        #messageBox {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #messageBox.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;} 
+            to {bottom: 30px; opacity: 1;}
+        }
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;} 
+            to {bottom: 0; opacity: 0;}
+        }
+
+        /* Estilo para o Lightbox */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* Controlado por JS */
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        /* Estilo para imagem de fallback quando o Drive falha */
+        .image-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e0e0e0;
+            color: #777;
+            text-align: center;
+            height: 100%;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            padding: 1rem;
+        }
+        
+        /* Ocultar scrollbar em elementos específicos */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
 </head>
-<body>
-    <header>
-        <h1>Artesanato de Natal Feito à Mão</h1>
-        <nav>
-            <a href="index.html">Produtos</a>
-            <a href="encomenda.html">Encomendar</a>
-        </nav>
+<body class="bg-gray-50">
+
+    <!-- Modal Lightbox -->
+    <div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
+        <div class="relative bg-white p-6 rounded-lg max-w-4xl max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
+            <button class="absolute top-2 right-2 text-xl font-bold text-gray-700 hover:text-red-500 transition" onclick="closeLightbox()">
+                &times;
+            </button>
+            <div class="md:flex md:space-x-6">
+                <!-- Imagem -->
+                <div class="md:w-1/2 flex items-center justify-center p-2">
+                    <img id="lightboxImage" src="" alt="Produto em destaque" class="max-h-[70vh] w-auto object-contain rounded-lg shadow-md">
+                </div>
+                <!-- Detalhes e Carrinho -->
+                <div class="md:w-1/2 mt-4 md:mt-0 p-4 hide-scrollbar overflow-y-auto max-h-[70vh]">
+                    <h2 id="lightboxName" class="text-3xl font-extrabold text-gray-800 mb-2"></h2>
+                    <p class="text-xl text-green-600 font-bold mb-4">
+                        <span id="lightboxPrice"></span>
+                    </p>
+                    <div class="border-t border-gray-200 pt-4">
+                        <p class="text-gray-600 mb-4" id="lightboxDescription">
+                            <!-- Descrição do produto aqui (mock content) -->
+                            Este é um artigo artesanal único, feito à mão com materiais sustentáveis e dedicação. Perfeito para presente ou para decorar o seu espaço.
+                        </p>
+                    </div>
+                    
+                    <button id="lightboxAddToCart" data-product-id="" class="w-full bg-indigo-600 text-white py-3 mt-4 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] shadow-lg">
+                        Adicionar ao Carrinho
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Mensagem (Toast) -->
+    <div id="messageBox"></div>
+
+    <!-- Header e Carrinho -->
+    <header class="bg-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-black text-indigo-600">Artesanato Local</h1>
+            <button id="viewOrderForm" class="relative bg-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-600 transition duration-300 shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.542 12 5.5 12h12.25a.25.25 0 00.25-.25v-1.5a.25.25 0 00-.25-.25H5.5c-.138 0-.25-.112-.25-.25v-1.125c0-.138.112-.25.25-.25h11.493a2.25 2.25 0 002.146-1.588L18.49 5.86a2.25 2.25 0 00-2.146-1.588H6.295c-1.071 0-2.074.521-2.673 1.353z" />
+                    <path d="M10.75 16.5a.75.75 0 100-1.5.75.75 0 000 1.5zM17.5 16.5a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+                </svg>
+                Encomendar
+                <span id="cartCount" class="absolute -top-2 -right-2 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+        </div>
     </header>
 
-    <main>
-        <h2>Catálogo de Produtos Natalícios</h2>
-        <p>Abaixo encontra a nossa lista de produtos, atualizada em tempo real a partir do nosso stock. Clique num produto para encomendar!</p>
-        
-        <section id="lista-produtos">
-            <p id="loading-message" style="text-align: center; color: #27AE60;">A carregar produtos do nosso armazém...</p>
+    <main id="appContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Secção do Catálogo -->
+        <section id="catalogueSection">
+            <h2 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">O Nosso Catálogo de Produtos Únicos</h2>
+            
+            <!-- Mensagem de erro/loading -->
+            <p id="loadingMessage" class="text-center text-xl text-gray-600 p-10">
+                A carregar produtos...
+            </p>
+            <p id="errorMessage" class="hidden text-center text-xl text-red-600 p-10 font-medium bg-red-100 rounded-lg border border-red-300">
+                Não foi possível carregar o catálogo de produtos.
+                <br>
+                <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2"></span>
+            </p>
+
+            <!-- Grelha do Catálogo -->
+            <div id="productGallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Produtos serão injetados aqui pelo JavaScript -->
+            </div>
+        </section>
+
+        <!-- Secção do Formulário de Encomenda -->
+        <section id="orderSection" class="hidden max-w-4xl mx-auto mt-12 bg-white p-8 rounded-xl shadow-2xl">
+            <button id="backToCatalogue" class="text-indigo-600 hover:text-indigo-800 font-medium mb-4 flex items-center transition duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Voltar ao Catálogo
+            </button>
+            <h2 class="text-3xl font-extrabold text-gray-800 mb-6 border-b pb-2">Detalhes da Encomenda</h2>
+            
+            <form id="orderForm" class="space-y-6">
+                
+                <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                    <h3 class="text-lg font-bold text-indigo-700 mb-2">Resumo da Seleção</h3>
+                    <div id="selectedProductsSummary" class="text-sm text-indigo-800 space-y-1">
+                        <!-- Resumo dos produtos selecionados -->
+                    </div>
+                    <input type="hidden" id="produtosSelecionadosInput" name="produtos_selecionados" required>
+                </div>
+
+                <!-- Campo Nome -->
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo <span class="text-red-500">*</span></label>
+                    <input type="text" id="nome" name="nome" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                </div>
+
+                <!-- Campo Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+                    <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                </div>
+
+                <!-- Campo Contacto -->
+                <div>
+                    <label for="contacto" class="block text-sm font-medium text-gray-700">Contacto Telefónico <span class="text-red-500">*</span></label>
+                    <input type="tel" id="contacto" name="contacto" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                </div>
+
+                <!-- Campo Quantidade (Adicionado para submissão, mas o input principal vem do JS) -->
+                <div>
+                    <label for="quantidade" class="block text-sm font-medium text-gray-700">Quantidade Total de Itens <span class="text-red-500">*</span></label>
+                    <input type="number" id="quantidade" name="quantidade" required readonly class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm bg-gray-100 p-3 border" value="0">
+                </div>
+
+                <!-- Campo Data Preferida -->
+                <div>
+                    <label for="data_preferida" class="block text-sm font-medium text-gray-700">Data Preferida para Entrega (Opcional)</label>
+                    <input type="date" id="data_preferida" name="data_preferida" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                </div>
+
+                <!-- Campo Mensagem -->
+                <div>
+                    <label for="mensagem" class="block text-sm font-medium text-gray-700">Mensagem/Instruções Especiais</label>
+                    <textarea id="mensagem" name="mensagem" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border"></textarea>
+                </div>
+
+                <!-- Botão de Submissão -->
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-gray-400" id="submitButton">
+                    Finalizar Encomenda e Enviar Pedido
+                </button>
+            </form>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2025 Artesanato Natalício. Feito com carinho para si.</p>
-    </footer>
+    <script>
+        // Configurações e Estado (ATUALIZE O URL AQUI)
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwg7grb8NkIcVqB3hb2npNwPnGrRHfHqfe_vYlKGFmqKWpr9fOmEs2R7FIiQ1GIpNd2g/exec";
+        
+        let productCatalogue = []; // Armazena todos os produtos carregados
+        let cart = {};             // { productIndex: count, ... }
+        
+        // Elementos DOM
+        const elements = {
+            gallery: document.getElementById('productGallery'),
+            cartCount: document.getElementById('cartCount'),
+            loadingMessage: document.getElementById('loadingMessage'),
+            errorMessage: document.getElementById('errorMessage'),
+            scriptUrlDisplay: document.getElementById('scriptUrlDisplay'),
+            catalogueSection: document.getElementById('catalogueSection'),
+            orderSection: document.getElementById('orderSection'),
+            viewOrderForm: document.getElementById('viewOrderForm'),
+            orderForm: document.getElementById('orderForm'),
+            selectedProductsSummary: document.getElementById('selectedProductsSummary'),
+            produtosSelecionadosInput: document.getElementById('produtosSelecionadosInput'),
+            quantidadeInput: document.getElementById('quantidade'),
+            submitButton: document.getElementById('submitButton'),
+            messageBox: document.getElementById('messageBox'),
+            lightboxOverlay: document.getElementById('lightboxOverlay'),
+            lightboxImage: document.getElementById('lightboxImage'),
+            lightboxName: document.getElementById('lightboxName'),
+            lightboxPrice: document.getElementById('lightboxPrice'),
+            lightboxAddToCart: document.getElementById('lightboxAddToCart'),
+            backToCatalogue: document.getElementById('backToCatalogue')
+        };
 
-    <script src="script.js"></script>
+        /**
+         * Exibe uma mensagem de notificação (Toast).
+         * @param {string} message - A mensagem a exibir.
+         * @param {string} type - 'success' ou 'error'.
+         */
+        function showMessage(message, type = 'success') {
+            const box = elements.messageBox;
+            box.textContent = message;
+            box.className = 'show';
+            
+            // Define cor de fundo
+            box.style.backgroundColor = type === 'success' ? '#10B981' : '#EF4444'; 
+
+            // Esconde a mensagem após 3 segundos
+            setTimeout(() => {
+                box.className = box.className.replace("show", "");
+            }, 3000);
+        }
+
+        /**
+         * Tenta converter um URL de partilha do Google Drive para um URL de conteúdo direto.
+         * @param {string} url - O URL original do Google Drive.
+         * @returns {string} O URL direto ou o URL original se a conversão falhar.
+         */
+        function getDirectDriveUrl(url) {
+            if (!url || typeof url !== 'string') return url;
+            
+            // Regex para extrair o ID de diferentes formatos de URL do Drive
+            const regex = /(?:https?:\/\/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/;
+            const match = url.match(regex);
+
+            if (match && match[1]) {
+                const fileId = match[1];
+                // URL de conteúdo direto
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+            }
+            
+            // Se não for um link do Drive reconhecido, devolve o original
+            return url;
+        }
+
+        /**
+         * Atualiza a exibição da contagem do carrinho e o resumo do formulário.
+         */
+        function updateCartDisplay() {
+            let totalCount = 0;
+            let summaryHTML = '';
+            let selectedProductNames = [];
+
+            for (const index in cart) {
+                const count = cart[index];
+                if (count > 0) {
+                    const product = productCatalogue[index];
+                    if (product) {
+                        totalCount += count;
+                        summaryHTML += `<p>• ${product.Name} (x${count})</p>`;
+                        selectedProductNames.push(`${product.Name} (x${count})`);
+                    }
+                }
+            }
+
+            elements.cartCount.textContent = totalCount;
+            elements.quantidadeInput.value = totalCount;
+            elements.produtosSelecionadosInput.value = selectedProductNames.join('; ');
+            
+            if (totalCount === 0) {
+                summaryHTML = `<p class="text-red-600 font-medium">O seu carrinho está vazio. Volte ao catálogo para adicionar produtos.</p>`;
+                elements.submitButton.disabled = true;
+            } else {
+                 elements.submitButton.disabled = false;
+            }
+            
+            elements.selectedProductsSummary.innerHTML = summaryHTML;
+        }
+
+        /**
+         * Adiciona ou remove um item do carrinho.
+         * @param {number} productIndex - O índice do produto no array productCatalogue.
+         * @param {number} change - +1 para adicionar, -1 para remover.
+         */
+        function updateCart(productIndex, change) {
+            const currentCount = cart[productIndex] || 0;
+            const newCount = Math.max(0, currentCount + change);
+
+            if (newCount > 0) {
+                cart[productIndex] = newCount;
+                showMessage(`${change > 0 ? 'Adicionado' : 'Removido'} 1x ${productCatalogue[productIndex].Name}. Total: ${newCount}`, 'success');
+            } else if (newCount === 0 && currentCount > 0) {
+                delete cart[productIndex];
+                showMessage(`Removido todo o stock de ${productCatalogue[productIndex].Name} do carrinho.`, 'error');
+            }
+            updateCartDisplay();
+        }
+
+        /**
+         * Abre o modal de lightbox com os detalhes do produto.
+         * @param {number} productIndex - Índice do produto.
+         */
+        function openLightbox(productIndex) {
+            const product = productCatalogue[productIndex];
+            if (!product) return;
+
+            elements.lightboxImage.src = getDirectDriveUrl(product.ImageFile);
+            elements.lightboxImage.onerror = () => {
+                 elements.lightboxImage.classList.add('image-fallback');
+                 elements.lightboxImage.src = "https://placehold.co/400x300/e0e0e0/777?text=Imagem+Drive+Indisponível";
+            };
+            elements.lightboxName.textContent = product.Name;
+            elements.lightboxPrice.textContent = `${parseFloat(product.Price).toFixed(2)} €`;
+            elements.lightboxAddToCart.onclick = () => {
+                updateCart(productIndex, 1);
+                closeLightbox();
+            };
+
+            elements.lightboxOverlay.style.display = 'flex';
+        }
+
+        /**
+         * Fecha o modal de lightbox.
+         */
+        function closeLightbox() {
+            elements.lightboxOverlay.style.display = 'none';
+            elements.lightboxImage.classList.remove('image-fallback');
+        }
+
+        /**
+         * Renderiza o catálogo de produtos na grelha.
+         */
+        function renderGallery(products) {
+            elements.gallery.innerHTML = ''; // Limpa a galeria
+            if (products.length === 0) {
+                elements.gallery.innerHTML = `<p class="col-span-full text-center text-xl text-gray-500 p-10">
+                    De momento, não temos produtos disponíveis no catálogo.
+                </p>`;
+                return;
+            }
+
+            products.forEach((product, index) => {
+                // Tenta obter o URL direto do Drive
+                const imageUrl = getDirectDriveUrl(product.ImageFile);
+                
+                // Cria o card do produto
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl shadow-lg hover:shadow-2xl transition duration-300 transform hover:-translate-y-1 overflow-hidden cursor-pointer flex flex-col';
+                card.onclick = () => openLightbox(index);
+
+                card.innerHTML = `
+                    <div class="h-48 relative overflow-hidden">
+                        <img src="${imageUrl}" alt="${product.Name}" 
+                             class="w-full h-full object-cover transition duration-300 hover:scale-105" 
+                             onerror="this.onerror=null; this.src='https://placehold.co/400x300/e0e0e0/777?text=Imagem+Drive+Indisponível'; this.parentElement.classList.add('image-fallback');">
+                    </div>
+                    <div class="p-4 flex-grow flex flex-col">
+                        <h3 class="text-xl font-bold text-gray-800 mb-1">${product.Name}</h3>
+                        <p class="text-2xl font-extrabold text-green-600 mt-auto">${parseFloat(product.Price).toFixed(2)} €</p>
+                        <button class="mt-3 bg-indigo-500 text-white py-2 rounded-lg font-semibold hover:bg-indigo-600 transition duration-300" 
+                                onclick="event.stopPropagation(); updateCart(${index}, 1);">
+                            Adicionar
+                        </button>
+                    </div>
+                `;
+                elements.gallery.appendChild(card);
+            });
+        }
+
+        /**
+         * Faz a chamada GET à Apps Script para obter a lista de produtos.
+         */
+        async function fetchCatalogue() {
+            elements.loadingMessage.classList.remove('hidden');
+            elements.errorMessage.classList.add('hidden');
+            elements.scriptUrlDisplay.textContent = `A URL de serviço atual é: ${GOOGLE_APPS_SCRIPT_URL}`;
+
+            try {
+                // Adiciona a ação correta para o doGet no Apps Script
+                const apiUrl = `${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`;
+                
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.result === 'error') {
+                     throw new Error(`Erro do Servidor Apps Script: ${data.message}`);
+                }
+
+                productCatalogue = data.products || [];
+                renderGallery(productCatalogue);
+
+            } catch (error) {
+                console.error("Erro ao carregar o catálogo:", error);
+                elements.errorMessage.classList.remove('hidden');
+                elements.errorMessage.innerHTML = `
+                    Não foi possível carregar o catálogo de produtos. 
+                    <br>
+                    **Erro:** ${error.message}
+                    <br>
+                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique as permissões e o ID da folha de cálculo no seu Apps Script. URL: ${GOOGLE_APPS_SCRIPT_URL}</span>
+                `;
+                elements.gallery.innerHTML = '';
+            } finally {
+                elements.loadingMessage.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Lida com a submissão do formulário de encomenda (POST).
+         */
+        async function handleOrderSubmission(event) {
+            event.preventDefault();
+            elements.submitButton.disabled = true;
+            elements.submitButton.textContent = 'A Enviar...';
+
+            const formData = new FormData(elements.orderForm);
+            
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    // O modo 'no-cors' é muitas vezes necessário para submissões Apps Script
+                    mode: 'no-cors' 
+                });
+
+                // Como usamos no-cors, a verificação response.ok falha. 
+                // Assumimos o sucesso e dependemos da Google Sheet para confirmar.
+                
+                // Simulação de resposta de sucesso após submissão no-cors
+                showMessage("Encomenda submetida com sucesso! Verifique o registo na sua Google Sheet.", 'success');
+                
+                // Reset do estado
+                cart = {};
+                updateCartDisplay();
+                elements.orderForm.reset();
+                
+                // Alternar de volta para o catálogo
+                elements.catalogueSection.classList.remove('hidden');
+                elements.orderSection.classList.add('hidden');
+                
+            } catch (error) {
+                console.error("Erro na submissão da encomenda:", error);
+                showMessage("Erro ao submeter a encomenda. Verifique a consola.", 'error');
+            } finally {
+                elements.submitButton.disabled = false;
+                elements.submitButton.textContent = 'Finalizar Encomenda e Enviar Pedido';
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Carregar o catálogo na inicialização
+            fetchCatalogue(); 
+            
+            // 2. Lógica para alternar entre catálogo e formulário
+            elements.viewOrderForm.addEventListener('click', () => {
+                elements.catalogueSection.classList.add('hidden');
+                elements.orderSection.classList.remove('hidden');
+                // Atualiza o resumo ao entrar no formulário
+                updateCartDisplay(); 
+            });
+
+            elements.backToCatalogue.addEventListener('click', () => {
+                elements.catalogueSection.classList.remove('hidden');
+                elements.orderSection.classList.add('hidden');
+            });
+
+            // 3. Submissão do formulário
+            elements.orderForm.addEventListener('submit', handleOrderSubmission);
+        });
+
+    </script>
 </body>
 </html>
