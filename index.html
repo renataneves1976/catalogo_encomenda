@@ -4,20 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo Estrela dos Desejos</title>
-    <!-- Carregar Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carregar Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Fonte Inter para estética moderna */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            /* NOVO FUNDO DE NATAL */
+            /* NOVO FUNDO DE NATAL (mantido da versão anterior) */
             background-image: url('https://img.cdndsgni.com/preview/13116737-m.jpg');
-            background-size: cover; /* Cobre toda a área */
-            background-position: center center; /* Centraliza a imagem */
-            background-repeat: no-repeat; /* Não repete a imagem */
-            background-attachment: fixed; /* O fundo permanece fixo ao scroll */
-            min-height: 100vh; /* Garante que o fundo preenche toda a altura */
+            background-size: cover; 
+            background-position: center center; 
+            background-repeat: no-repeat; 
+            background-attachment: fixed; 
+            min-height: 100vh;
         }
 
         /* Estilo para a caixa de mensagem personalizada */
@@ -114,16 +115,19 @@
 </head>
 <body class="bg-gray-50">
 
-    <!-- Modal Lightbox (PRÉ-VISUALIZAÇÃO SIMPLIFICADA) --><div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
+    <!-- Modal Lightbox (PRÉ-VISUALIZAÇÃO SIMPLIFICADA) -->
+    <div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
         <div class="relative bg-white p-6 rounded-lg max-w-4xl max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
             <button class="absolute top-2 right-2 text-xl font-bold text-gray-700 hover:text-red-500 transition" onclick="closeLightbox()">
                 &times;
             </button>
             <div class="flex flex-col items-center justify-center">
-                <!-- Imagem --><div class="w-full max-w-lg flex items-center justify-center p-2 mb-4">
+                <!-- Imagem -->
+                <div class="w-full max-w-lg flex items-center justify-center p-2 mb-4">
                     <img id="lightboxImage" src="" alt="Produto em destaque" class="max-h-[70vh] w-auto object-contain rounded-lg shadow-md">
                 </div>
-                <!-- Detalhes --><div class="text-center p-4">
+                <!-- Detalhes -->
+                <div class="text-center p-4">
                     <h2 id="lightboxName" class="text-3xl font-extrabold text-gray-800 mb-2"></h2>
                     <p class="text-xl text-green-600 font-bold">
                         <span id="lightboxPrice"></span>
@@ -133,15 +137,18 @@
         </div>
     </div>
 
-    <!-- Barra de Mensagem (Toast) --><div id="messageBox"></div>
+    <!-- Barra de Mensagem (Toast) -->
+    <div id="messageBox"></div>
 
-    <!-- Header e Carrinho --><header class="bg-white shadow-md sticky top-0 z-40">
+    <!-- Header e Carrinho -->
+    <header class="bg-white shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <!-- Título Atualizado --><h1 class="text-2xl font-black text-indigo-600">Estrela dos Desejos</h1>
+            <!-- Título em Destaque (CLASSE ALTERADA) -->
+            <h1 class="text-4xl md:text-5xl font-extrabold text-red-600 drop-shadow-lg transition duration-500 hover:text-red-700">Estrela dos Desejos</h1>
             
             <button id="viewOrderForm" class="relative bg-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-600 transition duration-300 shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.542 12 5.5 12h12.25a.25.25 0 00.25-.25v-1.5a.25.25 0 00-.25-.25H5.5c-.138 0-.25-.112-.25-.25v-1.125c0-.138.112-.25.25-.25h11.493a2.25 2.25 0 002.146-1.588L18.49 5.86a2.25 2.25 0 00-2.146-1.588H6.295c-1.071 0-2.074.521-2.673 1.353z" />
+                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.542 12 5.5 12h12.25a.25.25 0 00.25-.25v-1.5a.25.25 0 00-.25-.25H5.5c-.138 0-.25-.112-.25-.25v-1.125c0-.138.112-.25.25-.25h11.493a2.25 2.25 0 002.146-1.588L18.49 5.86a2.25 2.25 0 00-2.146-1.588H6.295c-1.071 0-2.074.521-2.673 1.353z" />
                     <path d="M10.75 16.5a.75.75 0 100-1.5.75.75 0 000 1.5zM17.5 16.5a.75.75 0 100-1.5.75.75 0 000 1.5z" />
                 </svg>
                 Encomendar
@@ -150,11 +157,14 @@
         </div>
     </header>
 
-    <!-- O conteúdo principal (catálogo/formulário) terá um fundo branco translúcido para visibilidade --><main id="appContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white/90 rounded-xl shadow-inner my-8">
-        <!-- Secção do Catálogo --><section id="catalogueSection">
+    <!-- Fundo do conteúdo principal é branco semi-transparente para contraste -->
+    <main id="appContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white/90 rounded-xl shadow-inner my-8">
+        <!-- Secção do Catálogo -->
+        <section id="catalogueSection">
             <h2 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">O Nosso Catálogo de Produtos Únicos</h2>
             
-            <!-- Mensagem de erro/loading --><p id="loadingMessage" class="text-center text-xl text-gray-600 p-10">
+            <!-- Mensagem de erro/loading -->
+            <p id="loadingMessage" class="text-center text-xl text-gray-600 p-10">
                 A carregar produtos...
             </p>
             <p id="errorMessage" class="hidden text-center text-xl text-red-600 p-10 font-medium bg-red-100 rounded-lg border border-red-300">
@@ -163,11 +173,14 @@
                 <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2"></span>
             </p>
 
-            <!-- Grelha do Catálogo --><div id="productGallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <!-- Produtos serão injetados aqui pelo JavaScript --></div>
+            <!-- Grelha do Catálogo -->
+            <div id="productGallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Produtos serão injetados aqui pelo JavaScript -->
+            </div>
         </section>
 
-        <!-- Secção do Formulário de Encomenda --><section id="orderSection" class="hidden max-w-4xl mx-auto mt-12 bg-white p-8 rounded-xl shadow-2xl">
+        <!-- Secção do Formulário de Encomenda -->
+        <section id="orderSection" class="hidden max-w-4xl mx-auto mt-12 bg-white p-8 rounded-xl shadow-2xl">
             <button id="backToCatalogue" class="text-indigo-600 hover:text-indigo-800 font-medium mb-4 flex items-center transition duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -181,36 +194,43 @@
                 <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
                     <h3 class="text-lg font-bold text-indigo-700 mb-2">Resumo da Seleção</h3>
                     <div id="selectedProductsSummary" class="text-sm text-indigo-800 space-y-1">
-                        <!-- Resumo dos produtos selecionados --></div>
+                        <!-- Resumo dos produtos selecionados -->
+                    </div>
                     <input type="hidden" id="produtosSelecionadosInput" name="produtos_selecionados" required>
                 </div>
 
-                <!-- Campo Nome --><div>
+                <!-- Campo Nome -->
+                <div>
                     <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo <span class="text-red-500">*</span></label>
                     <input type="text" id="nome" name="nome" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
                 </div>
 
-                <!-- Campo Email --><div>
+                <!-- Campo Email -->
+                <div>
                     <label for="email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
                     <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
                 </div>
 
-                <!-- Campo Contacto --><div>
+                <!-- Campo Contacto -->
+                <div>
                     <label for="contacto" class="block text-sm font-medium text-gray-700">Contacto Telefónico <span class="text-red-500">*</span></label>
                     <input type="tel" id="contacto" name="contacto" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
                 </div>
 
-                <!-- Campo Quantidade --><div>
+                <!-- Campo Quantidade -->
+                <div>
                     <label for="quantidade" class="block text-sm font-medium text-gray-700">Quantidade Total de Itens <span class="text-red-500">*</span></label>
                     <input type="number" id="quantidade" name="quantidade" required readonly class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm bg-gray-100 p-3 border" value="0">
                 </div>
 
-                <!-- Campo Mensagem --><div>
+                <!-- Campo Mensagem -->
+                <div>
                     <label for="mensagem" class="block text-sm font-medium text-gray-700">Mensagem/Instruções Especiais</label>
                     <textarea id="mensagem" name="mensagem" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border"></textarea>
                 </div>
 
-                <!-- Botão de Submissão --><button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-gray-400" id="submitButton">
+                <!-- Botão de Submissão -->
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-gray-400" id="submitButton">
                     Finalizar Encomenda e Enviar Pedido
                 </button>
             </form>
