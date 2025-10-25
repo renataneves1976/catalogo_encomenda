@@ -17,12 +17,12 @@
 
     <main>
         <h2>Formulário de Encomenda</h2>
-        <p>Preencha os campos abaixo para submeter a sua encomenda. Receberá uma confirmação por email.</p>
+        <p>Preencha os campos abaixo para submeter a sua encomenda.</p>
         
         <form id="form-encomenda">
-            <label for="Produto">Produto:</label>
-            <input type="text" id="Produto" name="Produto" required placeholder="Ex: Estrela de Feltro">
-
+            <label for="Produto">Produto a Encomendar:</label>
+            <input type="text" id="Produto" name="Produto" required placeholder="Ex: Estrela de Feltro" readonly>
+            
             <label for="Nome Cliente">Seu Nome Completo:</label>
             <input type="text" id="Nome Cliente" name="Nome Cliente" required>
 
@@ -34,12 +34,12 @@
 
             <button type="submit" id="submit-button">Submeter Encomenda</button>
 
-            <p id="feedback-message" style="margin-top: 15px; font-weight: bold;"></p>
+            <p id="feedback-message" aria-live="polite"></p>
         </form>
     </main>
 
     <footer>
-        <p>&copy; 2025 Artesanato Natalício.</p>
+        <p>&copy; 2025 Artesanato Natalício. Feito com carinho para si.</p>
     </footer>
 
     <script src="script.js"></script>
