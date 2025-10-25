@@ -92,7 +92,7 @@
         .lb-outerContainer { 
             border-radius: 12px !important; 
             overflow: hidden !important;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.08) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08) !important;
         }
     </style>
 </head>
@@ -122,7 +122,6 @@
             <h2 class="text-3xl sm:text-4xl font-bold mb-4 sm:mb-8 text-center text-gray-800">Nosso Catálogo de Produtos</h2>
             <p class="text-center text-gray-600 mb-8 sm:mb-12 text-sm sm:text-base">
                 Clique na imagem para ver em detalhe ou use o pisco (<span class="font-bold text-purple-600">✓</span>) para adicionar ao seu pedido.
-                <br><span class="text-xs text-gray-400">Suporta links de partilha pública do Google Drive (ex: .../view?usp=drive_link).</span>
             </p>
 
             <!-- Loading Spinner enquanto carrega o catálogo -->
@@ -141,7 +140,7 @@
             
             <div id="catalogue-error" class="text-center py-10 text-red-600 font-semibold hidden">
                 <p>Não foi possível carregar o catálogo de produtos.</p>
-                <p class="text-sm text-gray-500 mt-2">Verifique se o Apps Script foi implementado e se a folha "Catálogo" existe.</p>
+                <p class="text-sm text-gray-500 mt-2">Verifique a Consola (F12) e o Apps Script Log.</p>
             </div>
 
             <div class="mt-8 sm:mt-12 text-center">
@@ -222,13 +221,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox-plus-jquery.min.js"></script>
     
     <script>
-        // *** CONFIGURAÇÃO CRÍTICA ***
-        // URL da Google Apps Script. 
-        // URL ATUALIZADA: https://script.google.com/macros/s/AKfycbwElUBp-xpDz30CeXAUrAZ89b0UDWxuk_38Hgt-2l_5oZKgkm_ccabTBt-wVLVj_anunw/exec
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwElUBp-xpDz30CeXAUrAZ89b0UDWxuk_38Hgt-2l_5oZKgkm_ccabTBt-wVLVj_anunw/exec"; 
+        // =========================================================================
+        // *** CONFIGURAÇÃO CRÍTICA: URL DO NOVO APPS SCRIPT ***
+        // =========================================================================
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjhjXggGt_e1CIpKv1ok3GPmzWbW0YzethjdGQHeRke6D5q8jln_1KTQhLOtQF5X5Scw/exec"; 
 
         // Estado da Aplicação
-        let allProducts = []; // O novo array que irá armazenar os dados do catálogo
+        let allProducts = []; 
         let selectedProductIds = new Set();
 
         // Referências do DOM
@@ -253,55 +252,35 @@
         // --- FUNÇÕES DE UTILITY ---
 
         /**
-         * FUNÇÃO CRÍTICA PARA SUPORTE AO GOOGLE DRIVE.
-         * Converte um URL de partilha pública do Google Drive (e.g., /view?usp=drive_link)
-         * para um URL de conteúdo direto (e.g., /uc?export=view&id=FILE_ID) que pode
-         * ser usado numa tag <img>. Se não for um URL do Drive, retorna o URL original.
-         * * @param {string} sharedUrl - O URL fornecido na folha de cálculo.
-         * @returns {string} O URL direto para o conteúdo da imagem.
+         * Converte um URL de partilha pública do Google Drive para um URL de conteúdo direto.
+         * ESTA FUNÇÃO É CRÍTICA PARA AS IMAGENS DO DRIVE.
          */
         function getDirectDriveUrl(sharedUrl) {
-            if (!sharedUrl || typeof sharedUrl !== 'string') {
-                return '';
-            }
+            if (!sharedUrl || typeof sharedUrl !== 'string') return '';
             
-            // Tenta extrair o ID do ficheiro a partir de um URL de partilha padrão
-            // (e.g., https://drive.google.com/file/d/FILE_ID/view...)
-            const match = sharedUrl.match(/\/d\/([a-zA-Z0-9_-]+)\/view/);
+            // Regex para extrair o ID de ficheiros padrão do Drive:
+            const match = sharedUrl.match(/\/d\/([a-zA-Z0-9_-]+)(?:\/view)?/);
             
-            let realUrl = sharedUrl;
-
             if (match && match[1]) {
                 const fileId = match[1];
-                // Formato para acesso direto ao conteúdo
-                realUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                // Formato de link de conteúdo direto (uc?export=view)
+                const realUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                console.log(`[IMAGEM DEBUG] URL Drive convertido para: ${realUrl}`);
+                return realUrl;
             }
 
-            // --- DEBUG LOG ---
-            // Adiciona uma mensagem de debug específica se o URL contiver o ID de teste
-            if (sharedUrl.includes('1zhql-WUE6uXddOMEZ1qyU3SiFtXtP4g')) {
-                console.log(`[DEBUG DRIVE] URL Original (Folha): ${sharedUrl}`);
-                console.log(`[DEBUG DRIVE] ID Encontrado: ${match ? match[1] : 'NÃO ENCONTRADO'}`);
-                console.log(`[DEBUG DRIVE] URL Final Gerado: ${realUrl}`);
-            }
-            // -----------------
-
-            return realUrl; 
+            console.log(`[IMAGEM DEBUG] URL não é padrão do Drive, usando URL original: ${sharedUrl}`);
+            return sharedUrl;
         }
 
         /**
          * Formata uma string de preço para o formato monetário Euro (pt-PT).
-         * Ex: "50" -> "50,00 €" ou "12.5" -> "12,50 €"
-         * @param {string | number} price - O valor do preço.
-         * @returns {string} O valor formatado.
          */
         function formatPrice(price) {
             const value = parseFloat(price);
             if (isNaN(value)) {
-                // Se não for um número (ex: "N/A"), retorna o valor original.
                 return price; 
             }
-            // Usa Intl.NumberFormat para formatar para Euro (pt-PT)
             return new Intl.NumberFormat('pt-PT', {
                 style: 'currency',
                 currency: 'EUR',
@@ -310,8 +289,6 @@
 
         /**
          * Exibe uma mensagem de feedback (sucesso ou erro).
-         * @param {string} message - O texto a exibir.
-         * @param {string} type - 'success' ou 'error'.
          */
         function showFeedback(message, type) {
             feedbackMessage.textContent = message;
@@ -323,12 +300,10 @@
                 feedbackMessage.classList.add('bg-red-500');
             }
             
-            // Slide in
             setTimeout(() => {
                 feedbackMessage.classList.remove('translate-x-full');
             }, 50);
 
-            // Slide out after 7 seconds
             setTimeout(() => {
                 feedbackMessage.classList.add('translate-x-full');
             }, 7000);
@@ -336,7 +311,6 @@
 
         /**
          * Altera o estado de loading do botão de submissão.
-         * @param {boolean} isLoading - Se o formulário está a carregar.
          */
         function toggleLoading(isLoading) {
             submitButton.disabled = isLoading;
@@ -355,50 +329,50 @@
          * Busca o catálogo de produtos da Google Apps Script (função doGet).
          */
         async function fetchProducts() {
+            if (GOOGLE_APPS_SCRIPT_URL.includes("URL_DO_NOVO_APPS_SCRIPT_AQUI")) {
+                 console.error("ERRO CRÍTICO: Por favor, substitua 'URL_DO_NOVO_APPS_SCRIPT_AQUI' pela sua URL de implementação do Apps Script.");
+                 catalogueError.innerHTML = '<p>ERRO: URL do Apps Script não configurada.</p><p class="text-sm text-gray-500 mt-2">Por favor, implemente o Code.gs e atualize a variável GOOGLE_APPS_SCRIPT_URL neste ficheiro.</p>';
+                 catalogueError.classList.remove('hidden');
+                 catalogueLoading.classList.add('hidden');
+                 return;
+            }
+
             catalogueLoading.classList.remove('hidden');
             galleryContainer.classList.add('hidden');
             catalogueError.classList.add('hidden');
             proceedToOrderButton.disabled = true;
 
             try {
-                let response;
-                let result;
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'GET', 
+                    mode: 'cors'
+                });
 
-                for (let i = 0; i < 3; i++) {
-                    response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                        method: 'GET', // Usar GET para buscar dados
-                        mode: 'cors'
-                    });
+                const rawResultText = await response.text(); 
+                console.log("[DEBUG FETCH] Resposta bruta Apps Script (Primeiros 500 chars):", rawResultText.substring(0, 500)); 
 
-                    if (response.ok) {
-                        result = await response.json();
-                        if (result.result === 'success' && result.products) {
-                            allProducts = result.products;
-                            // --- DEBUG LOG ---
-                            console.log("[DEBUG FETCH] Catálogo Carregado com Sucesso:", allProducts);
-                            // -----------------
-                            return; // Sai se for bem-sucedido
-                        } else {
-                            // Erro de lógica na Apps Script, mas a comunicação funcionou
-                            throw new Error(result.message || "Erro desconhecido na Apps Script ao carregar o catálogo.");
-                        }
-                    } else if (i < 2) {
-                        // Implementação de backoff exponencial para retentar
-                        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); 
-                    }
+                if (!response.ok) {
+                    throw new Error(`Falha HTTP com status: ${response.status}. Resposta: ${rawResultText.substring(0, 100)}`);
                 }
+
+                const result = JSON.parse(rawResultText);
                 
-                // Se falhar após 3 tentativas
-                throw new Error("Falha ao carregar o catálogo após várias tentativas. Verifique a Apps Script.");
+                if (result.result === 'success' && result.products) {
+                    allProducts = result.products;
+                    console.log("[DEBUG FETCH] Catálogo Carregado com Sucesso.", allProducts.length + " produtos.");
+                } else {
+                    throw new Error(result.message || "Erro Apps Script ao carregar o catálogo (sucesso=false).");
+                }
 
             } catch (error) {
                 console.error('Erro ao buscar produtos:', error);
+                catalogueError.innerHTML = `<p>Não foi possível carregar o catálogo de produtos.</p><p class="text-sm text-gray-500 mt-2">Erro: ${error.message}</p>`;
                 catalogueError.classList.remove('hidden');
             } finally {
                 catalogueLoading.classList.add('hidden');
                 if (allProducts.length > 0) {
                     galleryContainer.classList.remove('hidden');
-                    proceedToOrderButton.disabled = false;
+                    proceedToOrderButton.disabled = (selectedProductIds.size === 0);
                     renderGallery();
                 }
             }
@@ -409,30 +383,25 @@
 
         /**
          * Altera entre a página do Catálogo e a página da Encomenda.
-         * @param {string} page - 'catalogue' ou 'order'.
          */
         function showPage(page) {
             if (page === 'catalogue') {
                 cataloguePage.classList.remove('hidden');
                 orderPage.classList.add('hidden');
-                // Realça o botão ativo
                 navCatalogueButton.classList.add('text-gray-900', 'font-bold', 'underline', 'decoration-purple-500');
                 navOrderButton.classList.remove('text-gray-900', 'font-bold', 'underline', 'decoration-purple-500');
             } else if (page === 'order') {
-                // Prepara a página de encomenda com os produtos selecionados
                 updateSelectedProductsDisplay();
                 
                 if (selectedProductIds.size === 0) {
                     showFeedback("Por favor, selecione pelo menos um produto no catálogo antes de prosseguir.", 'error');
-                    return; // Impede a mudança de página se nada estiver selecionado
+                    return; 
                 }
 
                 cataloguePage.classList.add('hidden');
                 orderPage.classList.remove('hidden');
-                // Realça o botão ativo
                 navCatalogueButton.classList.remove('text-gray-900', 'font-bold', 'underline', 'decoration-purple-500');
                 navOrderButton.classList.add('text-gray-900', 'font-bold', 'underline', 'decoration-purple-500');
-                // Role para o topo para ver o formulário
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
@@ -440,14 +409,12 @@
 
         /**
          * Cria e insere as miniaturas dos produtos na galeria.
-         * Usa o array `allProducts` carregado da Apps Script.
          */
         function renderGallery() {
             galleryContainer.innerHTML = ''; 
             
             if (allProducts.length === 0) {
                 galleryContainer.innerHTML = '<p class="text-center text-gray-500 col-span-full">Nenhum produto encontrado no catálogo.</p>';
-                proceedToOrderButton.disabled = true;
                 return;
             }
 
@@ -464,33 +431,29 @@
                     'overflow-hidden', 
                     'transition-all', 
                     'duration-300', 
-                    'relative', // Para posicionar o pisco
+                    'relative', 
                     'flex', 'flex-col', 'justify-between',
-                    isSelected ? 'selected' : 'border-transparent' // Define o estado inicial da borda
+                    isSelected ? 'selected' : 'border-transparent' 
                 );
                 
-                // O `imageFile` é o URL de partilha do Drive ou URL direto de outra fonte.
                 const sharedOrDirectUrl = product.imageFile;
-                // Usa a nova função para obter o URL de conteúdo direto
                 const realImageUrl = getDirectDriveUrl(sharedOrDirectUrl); 
                 
                 // Imagem de substituição se a imagem principal falhar
-                const placeholderUrl = `https://placehold.co/150x150/a78bfa/ffffff?text=${product.name}`;
+                const placeholderUrl = `https://placehold.co/150x150/a78bfa/ffffff?text=${encodeURIComponent(product.name)}`;
 
                 // 1. Link Lightbox (responsável pelo zoom/galeria)
                 const imageLink = document.createElement('a');
-                // Para o Lightbox, usamos o URL de conteúdo direto, que deve funcionar
                 imageLink.href = realImageUrl; 
-                imageLink.setAttribute('data-lightbox', 'product-gallery'); // Agrupa todas as imagens numa galeria
-                // Usa formatPrice() no título da lightbox
+                imageLink.setAttribute('data-lightbox', 'product-gallery'); 
                 imageLink.setAttribute('data-title', `${product.name} - ${formatPrice(product.price)}`);
-                imageLink.classList.add('block', 'aspect-square'); // Ocupa o espaço da imagem
+                imageLink.classList.add('block', 'aspect-square'); 
 
                 // Imagem
                 imageLink.innerHTML = `
                     <img 
                         src="${realImageUrl}" 
-                        onerror="this.onerror=null; this.src='${placeholderUrl}'"
+                        onerror="this.onerror=null; this.src='${placeholderUrl}'; console.error('ERRO IMAGEM: Produto ID ${product.id}. URL usada: ${realImageUrl}. VERIFIQUE AS PERMISSÕES DO GOOGLE DRIVE (Tem de ser \"Qualquer pessoa com o link\").')"
                         alt="${product.name}" 
                         loading="lazy"
                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
@@ -503,14 +466,13 @@
                 const tickContainer = document.createElement('div');
                 tickContainer.id = `tick-${product.id}`;
                 tickContainer.classList.add('selection-tick', 'bg-white', 'shadow-md');
-                // Aplica a classe 'selected' ao tickContainer se estiver selecionado
                 if (isSelected) {
                     tickContainer.classList.add('selected');
                 }
 
                 // Evento de clique para seleção
                 tickContainer.onclick = (e) => {
-                    e.stopPropagation(); // É CRÍTICO para que o clique não ative o Lightbox
+                    e.stopPropagation(); 
                     toggleSelection(product.id);
                 };
 
@@ -520,7 +482,6 @@
                         <path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 0 1 .208 1.07l-7.427 9.873a.75.75 0 0 1-1.127.07l-4.743-4.744a.75.75 0 0 1 1.06-1.06l4.218 4.219 6.99-9.293a.75.75 0 0 1 1.07-.208Z" clip-rule="evenodd" />
                     </svg>
                 `;
-                // Se estiver selecionado, garantimos que o ícone está visível
                 if (isSelected) {
                     tickContainer.classList.remove('opacity-0');
                 } else {
@@ -547,7 +508,6 @@
 
         /**
          * Alterna a seleção de um produto.
-         * @param {number} productId - ID do produto a selecionar/desselecionar.
          */
         function toggleSelection(productId) {
             const card = document.getElementById(`product-${productId}`);
@@ -555,13 +515,11 @@
             const tickIcon = tickContainer.querySelector('.selection-tick-icon');
 
             if (selectedProductIds.has(productId)) {
-                // Desselecionar
                 selectedProductIds.delete(productId);
                 card.classList.remove('selected');
                 tickContainer.classList.remove('selected');
                 tickIcon.classList.add('opacity-0');
             } else {
-                // Selecionar
                 selectedProductIds.add(productId);
                 card.classList.add('selected');
                 tickContainer.classList.add('selected');
@@ -582,12 +540,11 @@
          * Preenche os campos de produtos na página de encomenda.
          */
         function updateSelectedProductsDisplay() {
-            // Obtém os nomes dos produtos selecionados usando o array allProducts
             const selectedNames = Array.from(selectedProductIds)
                 .sort((a, b) => a - b) 
                 .map(id => {
-                    const product = allProducts.find(p => p.id === id);
-                    // Usa formatPrice() aqui também
+                    // Garante que o ID é um número para a comparação
+                    const product = allProducts.find(p => p.id === Number(id)); 
                     return product ? `${product.name} (${formatPrice(product.price)})` : `Produto Desconhecido ID:${id}`;
                 })
                 .join(', ');
@@ -599,7 +556,6 @@
 
         /**
          * Envia os dados do formulário para a Google Apps Script.
-         * @param {Event} e - O evento de submissão do formulário.
          */
         async function submitOrder(e) {
             e.preventDefault();
@@ -618,64 +574,37 @@
             }
 
             try {
-                let response;
-                let result;
-                let success = false;
-                
-                for (let i = 0; i < 3; i++) {
-                    response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'cors', 
-                        body: params.toString(), 
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        }
-                    });
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors', 
+                    body: params.toString(), 
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                });
 
-                    if (response.ok) {
-                        const resultText = await response.text();
-                        try {
-                            // A Apps Script DEVE retornar um JSON
-                            result = JSON.parse(resultText);
-                            if (result.result === 'success') {
-                                success = true;
-                                break;
-                            } else {
-                                // Erro na lógica do Apps Script, mas a comunicação funcionou
-                                throw new Error(result.message || "Erro desconhecido na Apps Script.");
-                            }
-                        } catch (e) {
-                            console.warn(`Tentativa ${i+1}: Resposta JSON inválida ou erro na Apps Script.`, resultText);
-                        }
-                    } else if (i < 2) {
-                        // Se a resposta HTTP falhar (4xx, 5xx) e não for a última tentativa, tenta novamente
-                        console.warn(`Tentativa ${i+1}: Falha HTTP com status ${response.status}. A tentar novamente...`);
-                    }
-                    
-                    if (!success && i < 2) {
-                        // Implementação de backoff exponencial
-                        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); 
-                    }
-                }
+                const resultText = await response.text();
                 
-                if (success) {
+                if (!response.ok) {
+                    throw new Error(`Falha HTTP na submissão: ${response.status}. Resposta: ${resultText.substring(0, 100)}`);
+                }
+
+                const result = JSON.parse(resultText);
+
+                if (result.result === 'success') {
                     showFeedback("Encomenda submetida com sucesso! Obrigado! Em breve entraremos em contacto.", 'success');
                     orderForm.reset();
                     selectedProductIds.clear();
                     updateSelectionCount();
-                    // Voltamos à página do catálogo e fazemos um novo fetch (caso tenha sido atualizado)
                     fetchProducts(); 
                     showPage('catalogue'); 
                 } else {
-                    // Este erro é apanhado se as 3 tentativas falharem ou o erro for externo (Failed to fetch)
-                    throw new Error("Falha na submissão após várias tentativas. Verifique as permissões da Apps Script.");
+                    throw new Error(result.message || "Erro Apps Script (sucesso=false) na submissão.");
                 }
-
 
             } catch (error) {
                 console.error('Erro CRÍTICO de Submissão:', error);
-                // Mensagem atualizada para ajudar o utilizador
-                showFeedback(`Falha ao enviar encomenda: Ocorreu um erro. Por favor, tente novamente ou verifique as permissões da Apps Script.`, 'error');
+                showFeedback(`Falha ao enviar encomenda: ${error.message}. Por favor, verifique o Apps Script Log.`, 'error');
             } finally {
                 toggleLoading(false);
             }
@@ -686,9 +615,9 @@
         window.onload = () => {
             orderForm.addEventListener('submit', submitOrder);
             showPage('catalogue'); 
-            fetchProducts(); // CHAMA A FUNÇÃO PARA CARREGAR DADOS
+            fetchProducts(); 
 
-            // Configuração do Lightbox (para garantir que funciona corretamente)
+            // Configuração do Lightbox 
             lightbox.option({
                 'resizeDuration': 200,
                 'wrapAround': true,
