@@ -1,0 +1,135 @@
+/* Reset Básico */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f7f7f7;
+    color: #333;
+}
+
+/* Header & Navegação Natalícia */
+header {
+    background-color: #C0392B; /* Vermelho Natal */
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin-bottom: 10px;
+}
+
+nav a {
+    color: white;
+    margin: 0 15px;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 5px 10px;
+    transition: background-color 0.3s;
+}
+
+nav a:hover {
+    background-color: #E74C3C;
+    border-radius: 5px;
+}
+
+/* Main Content */
+main {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 20px auto;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+h2 {
+    color: #27AE60; /* Verde Natal */
+    border-bottom: 2px solid #ECF0F1;
+    padding-bottom: 10px;
+}
+
+/* Lista de Produtos (index.html) */
+#lista-produtos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.produto-card {
+    border: 1px solid #ddd;
+    padding: 20px;
+    width: 250px;
+    border-radius: 8px;
+    text-align: left;
+    background-color: #fff;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
+}
+
+.produto-card:hover {
+    transform: translateY(-5px);
+}
+
+.produto-card h3 {
+    color: #C0392B;
+    margin-top: 0;
+}
+
+.produto-card p {
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+/* Formulário (encomenda.html) */
+#form-encomenda {
+    display: grid;
+    gap: 15px;
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px dashed #27AE60;
+    border-radius: 8px;
+}
+
+#form-encomenda label {
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+#form-encomenda input[type="text"],
+#form-encomenda input[type="email"],
+#form-encomenda input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+}
+
+#submit-button {
+    background-color: #27AE60; /* Verde Natal */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
+}
+
+#submit-button:hover {
+    background-color: #2ECC71;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 15px;
+    background-color: #2C3E50; /* Azul escuro */
+    color: #ECF0F1;
+    margin-top: 30px;
+}
