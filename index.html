@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artesanato Encantado - Produtos e Encomenda</title>
+    <title>Artesanato Encantado - Catálogo e Encomenda</title>
     
     <!-- Carregamento do Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -103,7 +103,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
             <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800">Artesanato Encantado</h1>
             <nav class="flex space-x-2 sm:space-x-4">
-                <button id="nav-catalogue" class="font-medium text-gray-500 hover:text-gray-900 transition p-2" onclick="showPage('catalogue')">Produtos</button>
+                <button id="nav-catalogue" class="font-medium text-gray-500 hover:text-gray-900 transition p-2" onclick="showPage('catalogue')">Catálogo</button>
                 <button id="nav-order" class="btn-primary text-white py-2 px-3 sm:px-4 rounded-lg font-semibold shadow-md transition-all text-sm sm:text-base" onclick="showPage('order')">
                     Encomendar
                 </button>
@@ -117,20 +117,20 @@
         <div id="feedback-message" class="fixed top-20 right-4 p-4 rounded-lg shadow-xl text-white font-semibold transition-all duration-300 transform translate-x-full z-30 w-4/5 sm:w-auto" style="min-width: 250px;"></div>
 
 
-        <!-- SECÇÃO: Produtos -->
+        <!-- SECÇÃO: CATÁLOGO -->
         <section id="catalogue-page" class="page-section">
-            <h2 class="text-3xl sm:text-4xl font-bold mb-4 sm:mb-8 text-center text-gray-800">Nosso Produtos de Produtos</h2>
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4 sm:mb-8 text-center text-gray-800">Nosso Catálogo de Produtos</h2>
             <p class="text-center text-gray-600 mb-8 sm:mb-12 text-sm sm:text-base">
                 Clique na imagem para ver em detalhe ou use o pisco (<span class="font-bold text-purple-600">✓</span>) para adicionar ao seu pedido.
             </p>
 
-            <!-- Loading Spinner enquanto carrega o Produtos -->
+            <!-- Loading Spinner enquanto carrega o catálogo -->
             <div id="catalogue-loading" class="text-center py-10">
                 <svg class="animate-spin mx-auto h-10 w-10 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p class="mt-2 text-gray-600">A carregar Produtos...</p>
+                <p class="mt-2 text-gray-600">A carregar catálogo...</p>
             </div>
             
             <!-- Contentor da Galeria -->
@@ -139,7 +139,7 @@
             </div>
             
             <div id="catalogue-error" class="text-center py-10 text-red-600 font-semibold hidden">
-                <p>Não foi possível carregar o Produtos de produtos.</p>
+                <p>Não foi possível carregar o catálogo de produtos.</p>
                 <p class="text-sm text-gray-500 mt-2">Verifique a Consola (F12) e o Apps Script Log.</p>
             </div>
 
@@ -202,7 +202,7 @@
                     <!-- Botões de Ação -->
                     <div class="flex flex-col sm:flex-row justify-between items-center pt-4 space-y-4 sm:space-y-0">
                         <button type="button" class="text-gray-600 hover:text-gray-900 font-semibold text-sm" onclick="showPage('catalogue')">
-                            ← Voltar ao Produtos
+                            ← Voltar ao Catálogo
                         </button>
                         <button type="submit" id="submit-button" class="btn-primary text-white py-3 px-8 rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-full sm:w-auto">
                             <span id="submit-text">Confirmar Encomenda</span>
@@ -224,7 +224,7 @@
         // =========================================================================
         // *** CONFIGURAÇÃO CRÍTICA: URL DO APPS SCRIPT ***
         // =========================================================================
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXdgMa41vUEO-SxPJJHfQcqNXniduty9kVLXq31Ba-cjNQlLAG0jj94R6IaWb7QGbM7Q/exec"; 
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjhjXggGt_e1CIpKv1ok3GPmzWbW0YzethjdGQHeRke6D5q8jln_1KTQhLOtQF5X5Scw/exec"; 
 
         // Estado da Aplicação
         let allProducts = []; 
@@ -323,10 +323,10 @@
             }
         }
 
-        // --- FUNÇÃO DE CARREGAMENTO DE DADOS DO Produtos ---
+        // --- FUNÇÃO DE CARREGAMENTO DE DADOS DO CATÁLOGO ---
 
         /**
-         * Busca o Produtos de produtos da Google Apps Script (função doGet).
+         * Busca o catálogo de produtos da Google Apps Script (função doGet).
          */
         async function fetchProducts() {
             if (GOOGLE_APPS_SCRIPT_URL.includes("URL_DO_NOVO_APPS_SCRIPT_AQUI")) {
@@ -359,14 +359,14 @@
                 
                 if (result.result === 'success' && result.products) {
                     allProducts = result.products;
-                    console.log("[DEBUG FETCH] Produtos Carregado com Sucesso.", allProducts.length + " produtos.");
+                    console.log("[DEBUG FETCH] Catálogo Carregado com Sucesso.", allProducts.length + " produtos.");
                 } else {
-                    throw new Error(result.message || "Erro Apps Script ao carregar o Produtos (sucesso=false).");
+                    throw new Error(result.message || "Erro Apps Script ao carregar o catálogo (sucesso=false).");
                 }
 
             } catch (error) {
                 console.error('Erro ao buscar produtos:', error);
-                catalogueError.innerHTML = `<p>Não foi possível carregar o Produtos de produtos.</p><p class="text-sm text-gray-500 mt-2">Erro: ${error.message}</p>`;
+                catalogueError.innerHTML = `<p>Não foi possível carregar o catálogo de produtos.</p><p class="text-sm text-gray-500 mt-2">Erro: ${error.message}</p>`;
                 catalogueError.classList.remove('hidden');
             } finally {
                 catalogueLoading.classList.add('hidden');
@@ -382,7 +382,7 @@
         // --- FUNÇÕES PRINCIPAIS ---
 
         /**
-         * Altera entre a página do Produtos e a página da Encomenda.
+         * Altera entre a página do Catálogo e a página da Encomenda.
          */
         function showPage(page) {
             if (page === 'catalogue') {
@@ -394,7 +394,7 @@
                 updateSelectedProductsDisplay();
                 
                 if (selectedProductIds.size === 0) {
-                    showFeedback("Por favor, selecione pelo menos um produto no Produtos antes de prosseguir.", 'error');
+                    showFeedback("Por favor, selecione pelo menos um produto no catálogo antes de prosseguir.", 'error');
                     return; 
                 }
 
@@ -414,7 +414,7 @@
             galleryContainer.innerHTML = ''; 
             
             if (allProducts.length === 0) {
-                galleryContainer.innerHTML = '<p class="text-center text-gray-500 col-span-full">Nenhum produto encontrado no Produtos.</p>';
+                galleryContainer.innerHTML = '<p class="text-center text-gray-500 col-span-full">Nenhum produto encontrado no catálogo.</p>';
                 return;
             }
 
@@ -561,7 +561,7 @@
             e.preventDefault();
 
             if (selectedProductIds.size === 0) {
-                 showFeedback("Por favor, selecione pelo menos um produto no Produtos.", 'error');
+                 showFeedback("Por favor, selecione pelo menos um produto no catálogo.", 'error');
                  return;
             }
 
