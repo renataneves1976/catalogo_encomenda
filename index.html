@@ -1,0 +1,656 @@
+
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artesanato Encantado - Catálogo e Encomenda</title>
+    
+    <!-- Carregamento do Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonte Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Lightbox2 CSS para o efeito de galeria -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet" />
+
+    <style>
+        /* Estilos personalizados */
+        :root {
+            --color-primary: #a78bfa; /* Violeta Suave */
+            --color-secondary: #fcd34d; /* Ouro Suave */
+            --color-bg: #f8f8f8;
+            --color-card-bg: #ffffff;
+            --color-text: #1f2937;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+        }
+        
+        /* Estilo do Cartão - Responsável pela Borda de Seleção */
+        .product-card {
+            transition: all 0.3s ease-in-out;
+            touch-action: manipulation;
+            border: 2px solid transparent;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Efeito visual de SELECIONADO */
+        .selected {
+            border-color: var(--color-primary) !important;
+            box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.5);
+            transform: scale(1.02);
+        }
+        
+        /* Estilo para o ícone de pisco (tick) no canto */
+        .selection-tick {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 10; 
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px; /* rounded-full */
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            transform: scale(1);
+            border: 2px solid #fff;
+        }
+        .selection-tick:hover {
+            transform: scale(1.1);
+        }
+        .selection-tick-icon {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        /* Estilos quando o produto está selecionado */
+        .selected .selection-tick {
+            background-color: var(--color-primary); 
+            border-color: var(--color-primary);
+        }
+        .selected .selection-tick-icon {
+            opacity: 1;
+        }
+
+        /* Estilos para o botão primário */
+        .btn-primary {
+            background-color: var(--color-primary);
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #8b5cf6;
+        }
+        
+        /* Ajustes para Lightbox */
+        .lb-outerContainer { 
+            border-radius: 12px !important; 
+            overflow: hidden !important;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.08) !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+
+    <!-- Cabeçalho Fixo -->
+    <header class="bg-white shadow-lg sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800">Artesanato Encantado</h1>
+            <nav class="flex space-x-2 sm:space-x-4">
+                <button id="nav-catalogue" class="font-medium text-gray-500 hover:text-gray-900 transition p-2" onclick="showPage('catalogue')">Catálogo</button>
+                <button id="nav-order" class="btn-primary text-white py-2 px-3 sm:px-4 rounded-lg font-semibold shadow-md transition-all text-sm sm:text-base" onclick="showPage('order')">
+                    Encomendar
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        
+        <!-- Mensagem de Feedback -->
+        <div id="feedback-message" class="fixed top-20 right-4 p-4 rounded-lg shadow-xl text-white font-semibold transition-all duration-300 transform translate-x-full z-30 w-4/5 sm:w-auto" style="min-width: 250px;"></div>
+
+
+        <!-- SECÇÃO: CATÁLOGO -->
+        <section id="catalogue-page" class="page-section">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4 sm:mb-8 text-center text-gray-800">Nosso Catálogo de Produtos</h2>
+            <p class="text-center text-gray-600 mb-8 sm:mb-12 text-sm sm:text-base">
+                Clique na imagem para ver em detalhe ou use o pisco (<span class="font-bold text-purple-600">✓</span>) para adicionar ao seu pedido.
+            </p>
+
+            <!-- Loading Spinner enquanto carrega o catálogo -->
+            <div id="catalogue-loading" class="text-center py-10">
+                <svg class="animate-spin mx-auto h-10 w-10 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-2 text-gray-600">A carregar catálogo...</p>
+            </div>
+            
+            <!-- Contentor da Galeria -->
+            <div id="gallery-container" class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6 hidden">
+                <!-- Produtos inseridos pelo JavaScript -->
+            </div>
+            
+            <div id="catalogue-error" class="text-center py-10 text-red-600 font-semibold hidden">
+                <p>Não foi possível carregar o catálogo de produtos.</p>
+                <p class="text-sm text-gray-500 mt-2">Verifique se o Apps Script foi implementado e se a folha "Catálogo" existe.</p>
+            </div>
+
+            <div class="mt-8 sm:mt-12 text-center">
+                <button id="proceed-to-order" class="btn-primary text-white py-3 px-6 sm:px-8 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50" onclick="showPage('order')" disabled>
+                    Prosseguir para Encomenda (<span id="selected-count">0</span> Produtos)
+                </button>
+            </div>
+        </section>
+
+        <!-- SECÇÃO: ENCOMENDA -->
+        <section id="order-page" class="page-section hidden">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-center text-gray-800">Finalizar Encomenda</h2>
+            <p class="text-center text-gray-600 mb-6 sm:mb-8">Preencha os seus dados para confirmarmos o pedido.</p>
+
+            <div class="max-w-2xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-100">
+                <form id="order-form" class="space-y-6">
+                    
+                    <!-- Produtos Selecionados Display -->
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Produtos Selecionados</label>
+                        <textarea id="selected-products-display" rows="3" readonly class="w-full p-2 border border-purple-300 rounded-lg bg-white text-gray-700 font-mono text-sm resize-none" placeholder="Nenhum produto selecionado"></textarea>
+                        
+                        <input type="hidden" id="produtos_selecionados_input" name="produtos_selecionados" required>
+                    </div>
+
+                    <!-- Dados do Cliente -->
+                    <div>
+                        <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input type="text" id="nome" name="nome" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3 border">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3 border">
+                        </div>
+                        <div>
+                            <label for="contacto" class="block text-sm font-medium text-gray-700">Contacto (Telefone)</label>
+                            <input type="tel" id="contacto" name="contacto" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3 border">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="quantidade" class="block text-sm font-medium text-gray-700">Quantidade Total (Estimada)</label>
+                            <input type="number" id="quantidade" name="quantidade" min="1" value="1" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3 border">
+                        </div>
+                        <div>
+                            <label for="data_preferida" class="block text-sm font-medium text-gray-700">Data Preferida para Contacto</label>
+                            <input type="date" id="data_preferida" name="data_preferida" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3 border">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="mensagem" class="block text-sm font-medium text-gray-700">Mensagem Adicional (Cor, Tamanho, etc.)</label>
+                        <textarea id="mensagem" name="mensagem" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3 border"></textarea>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center pt-4 space-y-4 sm:space-y-0">
+                        <button type="button" class="text-gray-600 hover:text-gray-900 font-semibold text-sm" onclick="showPage('catalogue')">
+                            ← Voltar ao Catálogo
+                        </button>
+                        <button type="submit" id="submit-button" class="btn-primary text-white py-3 px-8 rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-full sm:w-auto">
+                            <span id="submit-text">Confirmar Encomenda</span>
+                            <svg id="loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Lightbox2 JS (requer jQuery, que está incluído neste pacote) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox-plus-jquery.min.js"></script>
+    
+    <script>
+        // *** CONFIGURAÇÃO CRÍTICA ***
+        // URL da Google Apps Script. 
+        // URL ATUALIZADA: https://script.google.com/macros/s/AKfycbwElUBp-xpDz30CeXAUrAZ89b0UDWxuk_38Hgt-2l_5oZKgkm_ccabTBt-wVLVj_anunw/exec
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwElUBp-xpDz30CeXAUrAZ89b0UDWxuk_38Hgt-2l_5oZKgkm_ccabTBt-wVLVj_anunw/exec"; 
+
+        // Estado da Aplicação
+        let allProducts = []; // O novo array que irá armazenar os dados do catálogo
+        let selectedProductIds = new Set();
+
+        // Referências do DOM
+        const catalogueLoading = document.getElementById('catalogue-loading');
+        const catalogueError = document.getElementById('catalogue-error');
+        const proceedToOrderButton = document.getElementById('proceed-to-order');
+        const galleryContainer = document.getElementById('gallery-container');
+        const selectedCountSpan = document.getElementById('selected-count');
+        const selectedProductsDisplay = document.getElementById('selected-products-display');
+        const produtosSelecionadosInput = document.getElementById('produtos_selecionados_input');
+        const orderForm = document.getElementById('order-form');
+        const cataloguePage = document.getElementById('catalogue-page');
+        const orderPage = document.getElementById('order-page');
+        const navCatalogueButton = document.getElementById('nav-catalogue');
+        const navOrderButton = document.getElementById('nav-order');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const submitButton = document.getElementById('submit-button');
+        const submitText = document.getElementById('submit-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+
+
+        // --- FUNÇÕES DE UTILITY ---
+
+        /**
+         * Formata uma string de preço para o formato monetário Euro (pt-PT).
+         * Ex: "50" -> "50,00 €" ou "12.5" -> "12,50 €"
+         * @param {string | number} price - O valor do preço.
+         * @returns {string} O valor formatado.
+         */
+        function formatPrice(price) {
+            const value = parseFloat(price);
+            if (isNaN(value)) {
+                // Se não for um número (ex: "N/A"), retorna o valor original.
+                return price; 
+            }
+            // Usa Intl.NumberFormat para formatar para Euro (pt-PT)
+            return new Intl.NumberFormat('pt-PT', {
+                style: 'currency',
+                currency: 'EUR',
+            }).format(value);
+        }
+
+        /**
+         * Exibe uma mensagem de feedback (sucesso ou erro).
+         * @param {string} message - O texto a exibir.
+         * @param {string} type - 'success' ou 'error'.
+         */
+        function showFeedback(message, type) {
+            feedbackMessage.textContent = message;
+            feedbackMessage.classList.remove('bg-green-500', 'bg-red-500', 'hidden', 'translate-x-full');
+            
+            if (type === 'success') {
+                feedbackMessage.classList.add('bg-green-500');
+            } else {
+                feedbackMessage.classList.add('bg-red-500');
+            }
+            
+            // Slide in
+            setTimeout(() => {
+                feedbackMessage.classList.remove('translate-x-full');
+            }, 50);
+
+            // Slide out after 7 seconds
+            setTimeout(() => {
+                feedbackMessage.classList.add('translate-x-full');
+            }, 7000);
+        }
+
+        /**
+         * Altera o estado de loading do botão de submissão.
+         * @param {boolean} isLoading - Se o formulário está a carregar.
+         */
+        function toggleLoading(isLoading) {
+            submitButton.disabled = isLoading;
+            if (isLoading) {
+                submitText.textContent = 'A Enviar...';
+                loadingSpinner.classList.remove('hidden');
+            } else {
+                submitText.textContent = 'Confirmar Encomenda';
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        // --- FUNÇÃO DE CARREGAMENTO DE DADOS DO CATÁLOGO ---
+
+        /**
+         * Busca o catálogo de produtos da Google Apps Script (função doGet).
+         */
+        async function fetchProducts() {
+            catalogueLoading.classList.remove('hidden');
+            galleryContainer.classList.add('hidden');
+            catalogueError.classList.add('hidden');
+            proceedToOrderButton.disabled = true;
+
+            try {
+                let response;
+                let result;
+
+                for (let i = 0; i < 3; i++) {
+                    response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'GET', // Usar GET para buscar dados
+                        mode: 'cors'
+                    });
+
+                    if (response.ok) {
+                        result = await response.json();
+                        if (result.result === 'success' && result.products) {
+                            allProducts = result.products;
+                            return; // Sai se for bem-sucedido
+                        } else {
+                            // Erro de lógica na Apps Script, mas a comunicação funcionou
+                            throw new Error(result.message || "Erro desconhecido na Apps Script ao carregar o catálogo.");
+                        }
+                    } else if (i < 2) {
+                        // Implementação de backoff exponencial para retentar
+                        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); 
+                    }
+                }
+                
+                // Se falhar após 3 tentativas
+                throw new Error("Falha ao carregar o catálogo após várias tentativas. Verifique a Apps Script.");
+
+            } catch (error) {
+                console.error('Erro ao buscar produtos:', error);
+                catalogueError.classList.remove('hidden');
+            } finally {
+                catalogueLoading.classList.add('hidden');
+                if (allProducts.length > 0) {
+                    galleryContainer.classList.remove('hidden');
+                    proceedToOrderButton.disabled = false;
+                    renderGallery();
+                }
+            }
+        }
+
+
+        // --- FUNÇÕES PRINCIPAIS ---
+
+        /**
+         * Altera entre a página do Catálogo e a página da Encomenda.
+         * @param {string} page - 'catalogue' ou 'order'.
+         */
+        function showPage(page) {
+            if (page === 'catalogue') {
+                cataloguePage.classList.remove('hidden');
+                orderPage.classList.add('hidden');
+                // Realça o botão ativo
+                navCatalogueButton.classList.add('text-gray-900', 'font-bold', 'underline', 'decoration-purple-500');
+                navOrderButton.classList.remove('text-gray-900', 'font-bold', 'underline', 'decoration-purple-500');
+            } else if (page === 'order') {
+                // Prepara a página de encomenda com os produtos selecionados
+                updateSelectedProductsDisplay();
+                
+                if (selectedProductIds.size === 0) {
+                    showFeedback("Por favor, selecione pelo menos um produto no catálogo antes de prosseguir.", 'error');
+                    return; // Impede a mudança de página se nada estiver selecionado
+                }
+
+                cataloguePage.classList.add('hidden');
+                orderPage.classList.remove('hidden');
+                // Realça o botão ativo
+                navCatalogueButton.classList.remove('text-gray-900', 'font-bold', 'underline', 'decoration-purple-500');
+                navOrderButton.classList.add('text-gray-900', 'font-bold', 'underline', 'decoration-purple-500');
+                // Role para o topo para ver o formulário
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+
+        /**
+         * Cria e insere as miniaturas dos produtos na galeria.
+         * Usa o array `allProducts` carregado da Apps Script.
+         */
+        function renderGallery() {
+            galleryContainer.innerHTML = ''; 
+            
+            if (allProducts.length === 0) {
+                galleryContainer.innerHTML = '<p class="text-center text-gray-500 col-span-full">Nenhum produto encontrado no catálogo.</p>';
+                proceedToOrderButton.disabled = true;
+                return;
+            }
+
+            allProducts.forEach(product => {
+                const isSelected = selectedProductIds.has(product.id);
+                
+                const card = document.createElement('div');
+                card.id = `product-${product.id}`;
+                card.classList.add(
+                    'product-card', 
+                    'bg-white', 
+                    'rounded-xl', 
+                    'shadow-md', 
+                    'overflow-hidden', 
+                    'transition-all', 
+                    'duration-300', 
+                    'relative', // Para posicionar o pisco
+                    'flex', 'flex-col', 'justify-between',
+                    isSelected ? 'selected' : 'border-transparent' // Define o estado inicial da borda
+                );
+                
+                // O `realImageUrl` agora usa o nome do ficheiro da folha
+                const imageFilename = product.imageFile;
+                const realImageUrl = `./${imageFilename}`;
+                const placeholderUrl = `https://placehold.co/150x150/a78bfa/ffffff?text=${product.name}`;
+
+                // 1. Link Lightbox (responsável pelo zoom/galeria)
+                const imageLink = document.createElement('a');
+                imageLink.href = realImageUrl;
+                imageLink.setAttribute('data-lightbox', 'product-gallery'); // Agrupa todas as imagens numa galeria
+                // Usa formatPrice() no título da lightbox
+                imageLink.setAttribute('data-title', `${product.name} - ${formatPrice(product.price)}`);
+                imageLink.classList.add('block', 'aspect-square'); // Ocupa o espaço da imagem
+
+                // Imagem
+                imageLink.innerHTML = `
+                    <img 
+                        src="${realImageUrl}" 
+                        onerror="this.onerror=null; this.src='${placeholderUrl}'"
+                        alt="${product.name}" 
+                        loading="lazy"
+                        class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    >
+                `;
+                card.appendChild(imageLink);
+
+
+                // 2. Pisco de Seleção (Tick/Checkbox)
+                const tickContainer = document.createElement('div');
+                tickContainer.id = `tick-${product.id}`;
+                tickContainer.classList.add('selection-tick', 'bg-white', 'shadow-md');
+                // Aplica a classe 'selected' ao tickContainer se estiver selecionado
+                if (isSelected) {
+                    tickContainer.classList.add('selected');
+                }
+
+                // Evento de clique para seleção
+                tickContainer.onclick = (e) => {
+                    e.stopPropagation(); // É CRÍTICO para que o clique não ative o Lightbox
+                    toggleSelection(product.id);
+                };
+
+                // Ícone SVG de pisco (tick)
+                tickContainer.innerHTML = `
+                    <svg class="selection-tick-icon w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 0 1 .208 1.07l-7.427 9.873a.75.75 0 0 1-1.127.07l-4.743-4.744a.75.75 0 0 1 1.06-1.06l4.218 4.219 6.99-9.293a.75.75 0 0 1 1.07-.208Z" clip-rule="evenodd" />
+                    </svg>
+                `;
+                // Se estiver selecionado, garantimos que o ícone está visível
+                if (isSelected) {
+                    tickContainer.querySelector('.selection-tick-icon').classList.remove('opacity-0');
+                } else {
+                    tickContainer.querySelector('.selection-tick-icon').classList.add('opacity-0');
+                }
+
+                card.appendChild(tickContainer);
+
+                // 3. Nome e Preço do Produto
+                const productDetails = document.createElement('div');
+                productDetails.classList.add('p-3', 'text-center', 'mt-auto');
+                productDetails.innerHTML = `
+                    <p class="text-sm font-semibold text-gray-800 truncate mb-1">${product.name}</p>
+                    <p class="text-lg font-bold text-purple-600">${formatPrice(product.price)}</p>
+                `;
+                card.appendChild(productDetails);
+                
+                galleryContainer.appendChild(card);
+            });
+            
+            updateSelectionCount();
+        }
+
+
+        /**
+         * Alterna a seleção de um produto.
+         * @param {number} productId - ID do produto a selecionar/desselecionar.
+         */
+        function toggleSelection(productId) {
+            const card = document.getElementById(`product-${productId}`);
+            const tickContainer = document.getElementById(`tick-${productId}`);
+            const tickIcon = tickContainer.querySelector('.selection-tick-icon');
+
+            if (selectedProductIds.has(productId)) {
+                // Desselecionar
+                selectedProductIds.delete(productId);
+                card.classList.remove('selected');
+                tickContainer.classList.remove('selected');
+                tickIcon.classList.add('opacity-0');
+            } else {
+                // Selecionar
+                selectedProductIds.add(productId);
+                card.classList.add('selected');
+                tickContainer.classList.add('selected');
+                tickIcon.classList.remove('opacity-0');
+            }
+            updateSelectionCount();
+        }
+
+        /**
+         * Atualiza a contagem de produtos selecionados no botão.
+         */
+        function updateSelectionCount() {
+            selectedCountSpan.textContent = selectedProductIds.size;
+        }
+
+        /**
+         * Preenche os campos de produtos na página de encomenda.
+         */
+        function updateSelectedProductsDisplay() {
+            // Obtém os nomes dos produtos selecionados usando o array allProducts
+            const selectedNames = Array.from(selectedProductIds)
+                .sort((a, b) => a - b) 
+                .map(id => {
+                    const product = allProducts.find(p => p.id === id);
+                    // Usa formatPrice() aqui também
+                    return product ? `${product.name} (${formatPrice(product.price)})` : `Produto Desconhecido ID:${id}`;
+                })
+                .join(', ');
+
+            selectedProductsDisplay.value = selectedNames || 'Nenhum produto selecionado.';
+            produtosSelecionadosInput.value = selectedNames;
+        }
+
+
+        /**
+         * Envia os dados do formulário para a Google Apps Script.
+         * @param {Event} e - O evento de submissão do formulário.
+         */
+        async function submitOrder(e) {
+            e.preventDefault();
+
+            if (selectedProductIds.size === 0) {
+                 showFeedback("Por favor, selecione pelo menos um produto no catálogo.", 'error');
+                 return;
+            }
+
+            toggleLoading(true);
+
+            const formData = new FormData(orderForm);
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                params.append(key, value);
+            }
+
+            try {
+                let response;
+                let result;
+                let success = false;
+                
+                for (let i = 0; i < 3; i++) {
+                    response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors', 
+                        body: params.toString(), 
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const resultText = await response.text();
+                        try {
+                            // A Apps Script DEVE retornar um JSON
+                            result = JSON.parse(resultText);
+                            if (result.result === 'success') {
+                                success = true;
+                                break;
+                            } else {
+                                // Erro na lógica do Apps Script, mas a comunicação funcionou
+                                throw new Error(result.message || "Erro desconhecido na Apps Script.");
+                            }
+                        } catch (e) {
+                            console.warn(`Tentativa ${i+1}: Resposta JSON inválida ou erro na Apps Script.`, resultText);
+                        }
+                    } else if (i < 2) {
+                        // Se a resposta HTTP falhar (4xx, 5xx) e não for a última tentativa, tenta novamente
+                        console.warn(`Tentativa ${i+1}: Falha HTTP com status ${response.status}. A tentar novamente...`);
+                    }
+                    
+                    if (!success && i < 2) {
+                        // Implementação de backoff exponencial
+                        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); 
+                    }
+                }
+                
+                if (success) {
+                    showFeedback("Encomenda submetida com sucesso! Obrigado! Em breve entraremos em contacto.", 'success');
+                    orderForm.reset();
+                    selectedProductIds.clear();
+                    updateSelectionCount();
+                    // Voltamos à página do catálogo e fazemos um novo fetch (caso tenha sido atualizado)
+                    fetchProducts(); 
+                    showPage('catalogue'); 
+                } else {
+                    // Este erro é apanhado se as 3 tentativas falharem ou o erro for externo (Failed to fetch)
+                    throw new Error("Falha na submissão após várias tentativas. Verifique as permissões da Apps Script.");
+                }
+
+
+            } catch (error) {
+                console.error('Erro CRÍTICO de Submissão:', error);
+                // Mensagem atualizada para ajudar o utilizador
+                showFeedback(`Falha ao enviar encomenda: Ocorreu um erro. Por favor, tente novamente ou verifique as permissões da Apps Script.`, 'error');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // --- INICIALIZAÇÃO ---
+        
+        window.onload = () => {
+            orderForm.addEventListener('submit', submitOrder);
+            showPage('catalogue'); 
+            fetchProducts(); // CHAMA A NOVA FUNÇÃO PARA CARREGAR DADOS
+
+            // Configuração do Lightbox (para garantir que funciona corretamente)
+            lightbox.option({
+                'resizeDuration': 200,
+                'wrapAround': true,
+                'albumLabel': "Imagem %1 de %2", 
+                'alwaysShowNavButton': true 
+            });
+        };
+
+    </script>
+</body>
+</html>
