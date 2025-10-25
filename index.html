@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
@@ -81,38 +81,60 @@
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
         }
+
+        /* Estilo para o estado SELECIONADO do cartão */
+        .product-card.selected {
+            border: 3px solid #3b82f6; /* Borda azul */
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5), 0 4px 6px -2px rgba(59, 130, 246, 0.05); /* Sombra azulada */
+            transform: scale(1.02);
+        }
+
+        /* Estilo para o ícone de seleção */
+        .selection-icon {
+            width: 36px;
+            height: 36px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #9ca3af; /* Cinzento claro por defeito */
+            border: 2px solid #9ca3af;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 50%;
+            line-height: 1; /* Para alinhar o conteúdo */
+        }
+        .selection-icon.selected {
+            background-color: #3b82f6; /* Azul no estado selecionado */
+            color: white;
+            border: 2px solid #3b82f6;
+        }
+        .selection-icon:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body class="bg-gray-50">
 
-    <!-- Modal Lightbox -->
+    <!-- Modal Lightbox (PRÉ-VISUALIZAÇÃO SIMPLIFICADA) -->
     <div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
         <div class="relative bg-white p-6 rounded-lg max-w-4xl max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
             <button class="absolute top-2 right-2 text-xl font-bold text-gray-700 hover:text-red-500 transition" onclick="closeLightbox()">
                 &times;
             </button>
-            <div class="md:flex md:space-x-6">
+            <div class="flex flex-col items-center justify-center">
                 <!-- Imagem -->
-                <div class="md:w-1/2 flex items-center justify-center p-2">
+                <div class="w-full max-w-lg flex items-center justify-center p-2 mb-4">
                     <img id="lightboxImage" src="" alt="Produto em destaque" class="max-h-[70vh] w-auto object-contain rounded-lg shadow-md">
                 </div>
-                <!-- Detalhes e Carrinho -->
-                <div class="md:w-1/2 mt-4 md:mt-0 p-4 hide-scrollbar overflow-y-auto max-h-[70vh]">
+                <!-- Detalhes -->
+                <div class="text-center p-4">
                     <h2 id="lightboxName" class="text-3xl font-extrabold text-gray-800 mb-2"></h2>
-                    <p class="text-xl text-green-600 font-bold mb-4">
+                    <p class="text-xl text-green-600 font-bold">
                         <span id="lightboxPrice"></span>
                     </p>
-                    <div class="border-t border-gray-200 pt-4">
-                        <p class="text-gray-600 mb-4" id="lightboxDescription">
-                            <!-- Descrição do produto aqui (mock content) -->
-                            Este é um artigo artesanal único, feito à mão com materiais sustentáveis e dedicação. Perfeito para presente ou para decorar o seu espaço.
-                        </p>
-                    </div>
-                    
-                    <button id="lightboxAddToCart" data-product-id="" class="w-full bg-indigo-600 text-white py-3 mt-4 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] shadow-lg"
-                            onclick="event.stopPropagation();">
-                        Adicionar ao Carrinho
-                    </button>
                 </div>
             </div>
         </div>
@@ -223,7 +245,6 @@
 
     <script>
         // Configurações e Estado 
-        // URL ATUALIZADA COM O LINK FORNECIDO PELO UTILIZADOR (URL limpa /exec)
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwg7grb8NkIcVqB3hb2npNwPnGrRHfHqfe_vYlKGFmqKWpr9fOmEs2R7FIiQ1GIpNd2g/exec";
         
         let productCatalogue = []; // Armazena todos os produtos carregados
@@ -249,7 +270,6 @@
             lightboxImage: document.getElementById('lightboxImage'),
             lightboxName: document.getElementById('lightboxName'),
             lightboxPrice: document.getElementById('lightboxPrice'),
-            lightboxAddToCart: document.getElementById('lightboxAddToCart'),
             backToCatalogue: document.getElementById('backToCatalogue')
         };
 
@@ -280,39 +300,60 @@
         function getDirectDriveUrl(url) {
             if (!url || typeof url !== 'string') return url;
             
-            // Regex para extrair o ID de diferentes formatos de URL do Drive
             const regex = /(?:https?:\/\/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/;
             const match = url.match(regex);
 
             if (match && match[1]) {
                 const fileId = match[1];
-                // URL de conteúdo direto
                 return `https://drive.google.com/uc?export=view&id=${fileId}`;
             }
             
-            // Se não for um link do Drive reconhecido, devolve o original
             return url;
         }
 
         /**
+         * Atualiza o estado visual de um único cartão (borda, sombra, ícone de pisco).
+         * @param {number} index - O índice do produto.
+         */
+        function updateCardState(index) {
+            const cardElement = document.getElementById(`product-card-${index}`);
+            const iconElement = document.getElementById(`select-icon-${index}`);
+            const isSelected = (cart[index] || 0) > 0;
+
+            if (cardElement) {
+                cardElement.classList.toggle('selected', isSelected);
+            }
+
+            if (iconElement) {
+                iconElement.classList.toggle('selected', isSelected);
+                iconElement.innerHTML = isSelected 
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polyline points="20 6 9 17 4 12"></polyline></svg>` // Ícone de verificação (pisco)
+                    : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`; // Ícone de adição (+)
+            }
+        }
+
+        /**
          * Atualiza a exibição da contagem do carrinho e o resumo do formulário.
+         * Chama updateCardState para refrescar o visual dos cartões.
          */
         function updateCartDisplay() {
             let totalCount = 0;
             let summaryHTML = '';
             let selectedProductNames = [];
 
-            for (const index in cart) {
-                const count = cart[index];
+            // 1. Calcular totais e construir resumo
+            productCatalogue.forEach((product, index) => {
+                const count = cart[index] || 0;
+                
+                // 2. Atualizar o estado visual do cartão (IMPORTANTE)
+                updateCardState(index); 
+
                 if (count > 0) {
-                    const product = productCatalogue[index];
-                    if (product) {
-                        totalCount += count;
-                        summaryHTML += `<p>• ${product.Name} (x${count})</p>`;
-                        selectedProductNames.push(`${product.Name} (x${count})`);
-                    }
+                    totalCount += count;
+                    summaryHTML += `<p>• ${product.Name} (x${count})</p>`;
+                    selectedProductNames.push(`${product.Name} (x${count})`);
                 }
-            }
+            });
 
             elements.cartCount.textContent = totalCount;
             elements.quantidadeInput.value = totalCount;
@@ -329,26 +370,24 @@
         }
 
         /**
-         * Adiciona ou remove um item do carrinho.
+         * Adiciona ou remove um item do carrinho (alternando entre 0 e 1).
          * @param {number} productIndex - O índice do produto no array productCatalogue.
-         * @param {number} change - +1 para adicionar, -1 para remover.
          */
-        function updateCart(productIndex, change) {
+        function toggleSelection(productIndex) {
             const currentCount = cart[productIndex] || 0;
-            const newCount = Math.max(0, currentCount + change);
 
-            if (newCount > 0) {
-                cart[productIndex] = newCount;
-                showMessage(`${change > 0 ? 'Adicionado' : 'Removido'} 1x ${productCatalogue[productIndex].Name}. Total: ${newCount}`, 'success');
-            } else if (newCount === 0 && currentCount > 0) {
-                delete cart[productIndex];
-                showMessage(`Removido todo o stock de ${productCatalogue[productIndex].Name} do carrinho.`, 'error');
+            if (currentCount === 0) {
+                cart[productIndex] = 1; // Seleciona (define a 1)
+                showMessage(`Produto ${productCatalogue[productIndex].Name} adicionado.`, 'success');
+            } else {
+                delete cart[productIndex]; // Desseleciona (remove)
+                showMessage(`Produto ${productCatalogue[productIndex].Name} removido.`, 'error');
             }
             updateCartDisplay();
         }
 
         /**
-         * Abre o modal de lightbox com os detalhes do produto.
+         * Abre o modal de lightbox com a pré-visualização.
          * @param {number} productIndex - Índice do produto.
          */
         function openLightbox(productIndex) {
@@ -363,12 +402,7 @@
             elements.lightboxName.textContent = product.Name;
             elements.lightboxPrice.textContent = `${parseFloat(product.Price).toFixed(2)} €`;
             
-            // Define o que acontece ao clicar no botão do carrinho no Lightbox
-            elements.lightboxAddToCart.onclick = (e) => {
-                e.stopPropagation(); // Previne que o clique feche o lightbox
-                updateCart(productIndex, 1);
-                closeLightbox();
-            };
+            // SIMPLIFICADO: Não há botão de adicionar, é apenas pré-visualização.
 
             elements.lightboxOverlay.style.display = 'flex';
         }
@@ -394,15 +428,28 @@
             }
 
             products.forEach((product, index) => {
-                // Tenta obter o URL direto do Drive
                 const imageUrl = getDirectDriveUrl(product.ImageFile);
                 
-                // Cria o card do produto
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-xl shadow-lg hover:shadow-2xl transition duration-300 transform hover:-translate-y-1 overflow-hidden cursor-pointer flex flex-col';
+                card.id = `product-card-${index}`;
+                // Classe 'selected' será adicionada/removida dinamicamente
+                card.className = 'product-card bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1 overflow-hidden cursor-pointer flex flex-col relative border-2 border-transparent';
+                
+                // Clicar no cartão abre apenas a pré-visualização (Lightbox)
                 card.onclick = () => openLightbox(index);
 
+                // Checkmark (Pisco) Overlay
+                const isSelected = (cart[index] || 0) > 0;
+                
                 card.innerHTML = `
+                    <div id="select-icon-${index}" 
+                         class="absolute top-3 right-3 z-10 selection-icon ${isSelected ? 'selected' : ''}" 
+                         onclick="event.stopPropagation(); toggleSelection(${index});">
+                        ${isSelected 
+                            ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polyline points="20 6 9 17 4 12"></polyline></svg>` 
+                            : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`}
+                    </div>
+                    
                     <div class="h-48 relative overflow-hidden">
                         <img src="${imageUrl}" alt="${product.Name}" 
                              class="w-full h-full object-cover transition duration-300 hover:scale-105" 
@@ -411,19 +458,18 @@
                     <div class="p-4 flex-grow flex flex-col">
                         <h3 class="text-xl font-bold text-gray-800 mb-1">${product.Name}</h3>
                         <p class="text-2xl font-extrabold text-green-600 mt-auto">${parseFloat(product.Price).toFixed(2)} €</p>
-                        <button class="mt-3 bg-indigo-500 text-white py-2 rounded-lg font-semibold hover:bg-indigo-600 transition duration-300" 
-                                onclick="event.stopPropagation(); updateCart(${index}, 1);">
-                            Adicionar
-                        </button>
+                        <!-- Botão de adicionar removido; a seleção é feita pelo ícone no canto -->
                     </div>
                 `;
                 elements.gallery.appendChild(card);
+                
+                // Aplica o estado inicial, caso já existam itens no carrinho (após um refresh, por exemplo)
+                updateCardState(index);
             });
         }
 
         /**
          * Faz a chamada GET à Apps Script para obter a lista de produtos.
-         * ESTA FUNÇÃO GARANTE QUE O PARÂMETRO 'ACTION=GETPRODUCTS' É ENVIADO.
          */
         async function fetchCatalogue() {
             elements.loadingMessage.classList.remove('hidden');
@@ -431,10 +477,9 @@
             elements.scriptUrlDisplay.textContent = `A URL de serviço atual é: ${GOOGLE_APPS_SCRIPT_URL}`;
 
             try {
-                // ANEXA O PARÂMETRO DE AÇÃO USANDO O SEPARADOR '?' (CORRIGIDO PARA O URL /exec)
                 const finalApiUrl = `${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`;
 
-                console.log("A solicitar catálogo na URL:", finalApiUrl); // Log para depuração
+                console.log("A solicitar catálogo na URL:", finalApiUrl);
                 
                 const response = await fetch(finalApiUrl);
 
@@ -442,7 +487,6 @@
                     throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
                 }
 
-                // O script deve retornar JSON, por isso chamamos response.json()
                 const data = await response.json();
                 
                 if (data.result === 'error') {
@@ -479,20 +523,17 @@
             const formData = new FormData(elements.orderForm);
             
             try {
-                // Para POST, usamos o URL base (o script Apps é inteligente o suficiente para saber que é um POST)
                 const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: formData,
-                    // O modo 'no-cors' é necessário para submissões Apps Script
                     mode: 'no-cors' 
                 });
 
-                // Simulação de resposta de sucesso após submissão no-cors
                 showMessage("Encomenda submetida com sucesso! Verifique o registo na sua Google Sheet.", 'success');
                 
                 // Reset do estado
                 cart = {};
-                updateCartDisplay();
+                updateCartDisplay(); // Limpa o carrinho e remove os "piscos"
                 elements.orderForm.reset();
                 
                 // Alternar de volta para o catálogo
@@ -518,7 +559,6 @@
             elements.viewOrderForm.addEventListener('click', () => {
                 elements.catalogueSection.classList.add('hidden');
                 elements.orderSection.classList.remove('hidden');
-                // Atualiza o resumo ao entrar no formulário
                 updateCartDisplay(); 
             });
 
