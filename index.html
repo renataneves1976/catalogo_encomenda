@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
@@ -148,7 +148,7 @@
             
             <button id="viewOrderForm" class="relative bg-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-600 transition duration-300 shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.542 12 5.5 12h12.25a.25.25 0 00.25-.25v-1.5a.25.25 0 00-.25-.25H5.5c-.138 0-.25-.112-.25-.25v-1.125c0-.138.112-.25.25-.25h11.493a2.25 2.25 0 002.146-1.588L18.49 5.86a2.25 2.25 0 00-2.146-1.588H6.295c-1.071 0-2.074.521-2.673 1.353z" />
+                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.542 12 5.5 12h12.25a.25.25 0 00.25-.25v-1.5a.25.25 0 00-.25-.25H5.5c-.138 0-.25-.112-.25-.25v-1.125c0-.138.112-.25.25-.25h11.493a2.25 2.25 0 002.146-1.588L18.49 5.86a2.25 2.25 0 00-2.146-1.588H6.295c-1.071 0-2.074.521-2.673 1.353z" />
                     <path d="M10.75 16.5a.75.75 0 100-1.5.75.75 0 000 1.5zM17.5 16.5a.75.75 0 100-1.5.75.75 0 000 1.5z" />
                 </svg>
                 Encomendar
@@ -181,12 +181,14 @@
 
         <!-- Secção do Formulário de Encomenda -->
         <section id="orderSection" class="hidden max-w-4xl mx-auto mt-12 bg-white p-8 rounded-xl shadow-2xl">
-            <button id="backToCatalogue" class="text-indigo-600 hover:text-indigo-800 font-medium mb-4 flex items-center transition duration-200">
+            <!-- BOTÃO VOLTAR MELHORADO E DESTACADO -->
+            <button id="backToCatalogue" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-bold px-4 py-2 rounded-lg shadow-md mb-6 flex items-center transition duration-200 border border-indigo-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
                 Voltar ao Catálogo
             </button>
+            
             <h2 class="text-3xl font-extrabold text-gray-800 mb-6 border-b pb-2">Detalhes da Encomenda</h2>
             
             <form id="orderForm" class="space-y-6">
@@ -239,7 +241,8 @@
 
     <script>
         // Configurações e Estado 
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqkJkevuA0-ZVXT3NO_7Ppm6W2KK6LAHEQFgEZYQ8f2Xrem8gacPJhzRQ639YNagD5eQ/exec";
+        // NOVO URL CORRETO FORNECIDO PELO UTILIZADOR
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxE6E-49awQkFyoIziyw8IVmn-oXpn3mnPb1FS0bUpxE2fVQeFWI4J1wz6WCOshGzUiyw/exec";
         
         let productCatalogue = []; // Armazena todos os produtos carregados
         let cart = {};             // { productIndex: count, ... }
@@ -343,6 +346,7 @@
 
             elements.cartCount.textContent = totalCount;
             elements.quantidadeInput.value = totalCount;
+            // Prepara a string para o Apps Script (ex: "Produto A (x1); Produto B (x2)")
             elements.produtosSelecionadosInput.value = selectedProductNames.join('; ');
             
             if (totalCount === 0) {
@@ -515,21 +519,27 @@
 
         /**
          * Lida com a submissão do formulário de encomenda (POST).
+         * @returns {void}
          */
         async function handleOrderSubmission(event) {
             event.preventDefault();
             elements.submitButton.disabled = true;
             elements.submitButton.textContent = 'A Enviar...';
-
+            
+            // O Apps Script Web App espera o FormData diretamente
             const formData = new FormData(elements.orderForm);
             
             try {
-                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                // Para o Apps Script, usamos 'no-cors' no POST com FormData. 
+                // Não conseguimos ler a resposta JSON, mas o pedido é enviado
+                // com sucesso para o Sheets se o URL estiver correto e o Apps Script estiver ativo.
+                await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: formData,
                     mode: 'no-cors' 
                 });
 
+                // Assumimos o sucesso após a conclusão do fetch no modo no-cors.
                 showMessage("Encomenda submetida com sucesso! Verifique o registo na sua Google Sheet.", 'success');
                 
                 // Reset do estado
@@ -542,8 +552,9 @@
                 elements.orderSection.classList.add('hidden');
                 
             } catch (error) {
+                // Este catch só apanha erros de rede, não erros de lógica do Apps Script
                 console.error("Erro na submissão da encomenda:", error);
-                showMessage("Erro ao submeter a encomenda. Verifique a consola.", 'error');
+                showMessage("Erro ao submeter a encomenda. Tente novamente.", 'error');
             } finally {
                 elements.submitButton.disabled = false;
                 elements.submitButton.textContent = 'Finalizar Encomenda e Enviar Pedido';
