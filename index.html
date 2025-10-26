@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,7 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            /* NOVO FUNDO DE NATAL (mantido da versão anterior) */
+            /* Fundo de Natal */
             background-image: url('https://img.cdndsgni.com/preview/13116737-m.jpg');
             background-size: cover; 
             background-position: center center; 
@@ -143,7 +143,7 @@
     <!-- Header e Carrinho -->
     <header class="bg-white shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <!-- Título em Destaque (CLASSE ALTERADA) -->
+            <!-- Título em Destaque -->
             <h1 class="text-4xl md:text-5xl font-extrabold text-red-600 drop-shadow-lg transition duration-500 hover:text-red-700">Estrela dos Desejos</h1>
             
             <button id="viewOrderForm" class="relative bg-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-600 transition duration-300 shadow-md">
@@ -239,7 +239,7 @@
 
     <script>
         // Configurações e Estado 
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwg7grb8NkIcVqB3hb2npNwPnGrRHfHqfe_vYlKGFmqKWpr9fOmEs2R7FIiQ1GIpNd2g/exec";
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqkJkevuA0-ZVXT3NO_7Ppm6W2KK6LAHEQFgEZYQ8f2Xrem8gacPJhzRQ639YNagD5eQ/exec";
         
         let productCatalogue = []; // Armazena todos os produtos carregados
         let cart = {};             // { productIndex: count, ... }
@@ -380,6 +380,11 @@
             const product = productCatalogue[productIndex];
             if (!product) return;
 
+            // Formatação do preço com verificação de NaN
+            const formattedPrice = isNaN(parseFloat(product.Price)) 
+                ? "Preço Indisponível" 
+                : `${parseFloat(product.Price).toFixed(2)} €`;
+
             // Usa o URL do Flickr/CDN diretamente
             const imageUrl = getDirectImageUrl(product.ImageFile);
 
@@ -390,7 +395,7 @@
                  elements.lightboxImage.src = "https://placehold.co/400x300/e0e0e0/777?text=Imagem+Indisponível";
             };
             elements.lightboxName.textContent = product.Name;
-            elements.lightboxPrice.textContent = `${parseFloat(product.Price).toFixed(2)} €`;
+            elements.lightboxPrice.textContent = formattedPrice;
             
             elements.lightboxOverlay.style.display = 'flex';
         }
@@ -416,6 +421,15 @@
             }
 
             products.forEach((product, index) => {
+                // VERIFICAÇÃO DE PREÇO E DEBUG: Esta lógica garante que o valor é um número válido e o formata.
+                const priceValue = parseFloat(product.Price);
+                const formattedPrice = isNaN(priceValue) 
+                    ? "Preço Indisponível" 
+                    : `${priceValue.toFixed(2)} €`;
+                
+                // IMPORTANTE: REGISTO NA CONSOLA PARA DEPURAR OS DADOS BRUTOS RECEBIDOS
+                console.log(`[CATÁLOGO] Produto: ${product.Name}, Preço Bruto Recebido: "${product.Price}", Preço Formatado: ${formattedPrice}`);
+                
                 // Usa o URL do Flickr/CDN diretamente
                 const imageUrl = getDirectImageUrl(product.ImageFile);
                 
@@ -445,7 +459,7 @@
                     </div>
                     <div class="p-4 flex-grow flex flex-col">
                         <h3 class="text-xl font-bold text-gray-800 mb-1">${product.Name}</h3>
-                        <p class="text-2xl font-extrabold text-green-600 mt-auto">${parseFloat(product.Price).toFixed(2)} €</p>
+                        <p class="text-2xl font-extrabold text-green-600 mt-auto">${formattedPrice}</p>
                     </div>
                 `;
                 elements.gallery.appendChild(card);
@@ -491,7 +505,7 @@
                     <br>
                     **Erro:** ${error.message}
                     <br>
-                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique se o Apps Script está devolvendo o JSON correto com os novos URLs de imagem.</span>
+                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique se o Apps Script está devolvendo o JSON correto com os novos URLs de imagem e preços numéricos.</span>
                 `;
                 elements.gallery.innerHTML = '';
             } finally {
@@ -507,7 +521,6 @@
             elements.submitButton.disabled = true;
             elements.submitButton.textContent = 'A Enviar...';
 
-            // ATENÇÃO: Os dados do formulário não incluem mais 'data_preferida'
             const formData = new FormData(elements.orderForm);
             
             try {
