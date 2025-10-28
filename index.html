@@ -286,7 +286,7 @@
     <script>
         // Configurações e Estado 
         // *** URL ATUALIZADA DO GOOGLE APPS SCRIPT ***
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqzlMvJgzb5yo0kxhZeyuYZ52BVzIj09DvjNYo6soXhuokiZApw5edbOO5hcNqZR3l6Q/exec";
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyW3CEjhEfzjPvNmyNhiwNdxZ42O1BPXy27tSIziuLQPy4o7ZvYCznClIqVqa-eQozTcg/exec";
         
         let productCatalogue = []; // Armazena todos os produtos carregados
         let cart = {};             // { productIndex: count, ... }
@@ -332,6 +332,32 @@
                 box.className = box.className.replace("show", "");
             }, 3000);
         }
+
+        /**
+         * Tenta fazer fetch com retries e espera exponencial (backoff).
+         * Útil para Apps Scripts onde o primeiro fetch pode falhar devido a questões de rede/iframe.
+         * @param {string} url - O URL para o qual fazer fetch.
+         * @param {number} retries - Número máximo de retries.
+         * @param {number} delay - Atraso inicial em milissegundos.
+         */
+        async function fetchWithRetry(url, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        return response;
+                    }
+                } catch (error) {
+                    console.warn(`Tentativa ${i + 1} de fetch falhou: ${error.message}. A tentar novamente em breve...`);
+                }
+                // Se falhou e ainda há tentativas, espera antes de tentar novamente (backoff exponencial)
+                if (i < retries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+                }
+            }
+            throw new Error("Falha ao buscar o recurso após várias tentativas.");
+        }
+
 
         /**
          * Simplesmente devolve o URL. Assumimos que o URL do Flickr/CDN é direto e válido para a tag <img>.
@@ -559,7 +585,8 @@
                 // Adicionamos 'action=getProducts' como parâmetro de consulta para o doGet
                 const finalApiUrl = `${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`;
 
-                const response = await fetch(finalApiUrl);
+                // *** USAMOS FETCH COM RETRY PARA MAIOR ROBUSTEZ ***
+                const response = await fetchWithRetry(finalApiUrl);
 
                 if (!response.ok) {
                     throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
@@ -587,7 +614,7 @@
                     <br>
                     **Erro:** ${error.message}
                     <br>
-                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique se o Apps Script foi re-publicado com o código mais recente e se o nome da folha ('Catalogo') está correto.</span>
+                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique se o Apps Script foi re-publicado com o código mais recente e se o nome da folha ('Produtos') está correto.</span>
                 `;
                 elements.gallery.innerHTML = '';
             } finally {
@@ -621,7 +648,6 @@
 
                 // Como usamos 'no-cors', não podemos ler a resposta JSON, 
                 // mas a requisição é enviada. Assumimos sucesso.
-                // Se fosse 'cors', leríamos o JSON de resposta (data.result === 'success').
                 
                 showMessage("Encomenda submetida com sucesso! O registo foi guardado na sua folha de cálculo.", 'success');
                 
