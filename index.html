@@ -79,21 +79,21 @@
             padding: 1rem;
         }
         
-        /* Estilo para o estado SELECIONADO do cartão */
+        /* ESTILO DE SELEÇÃO MAIS MODERNO */
         .product-card.selected {
-            border: 3px solid #3b82f6; /* Borda azul */
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5), 0 4px 6px -2px rgba(59, 130, 246, 0.05); /* Sombra azulada */
-            transform: scale(1.02);
+            border: 4px solid #4f46e5; /* Indigo-600 */
+            box-shadow: 0 12px 20px -5px rgba(79, 70, 229, 0.4), 0 4px 6px -2px rgba(79, 70, 229, 0.1); 
+            transform: scale(1.03); /* Zoom mais proeminente */
         }
 
-        /* Estilo para o ícone de seleção (PISCO) */
+        /* ESTILO DO ÍCONE DE SELEÇÃO */
         .selection-icon {
-            width: 36px;
-            height: 36px;
+            width: 40px; /* Maior para melhor toque/clique */
+            height: 40px;
             background-color: rgba(255, 255, 255, 0.9);
             color: #9ca3af; 
             border: 2px solid #9ca3af;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -104,9 +104,9 @@
             line-height: 1; 
         }
         .selection-icon.selected {
-            background-color: #3b82f6; /* Azul no estado selecionado */
+            background-color: #4f46e5; /* Indigo-600 no estado selecionado */
             color: white;
-            border: 2px solid #3b82f6;
+            border: 2px solid #4f46e5;
         }
         .selection-icon:hover {
             transform: scale(1.1);
@@ -163,6 +163,17 @@
         <section id="catalogueSection">
             <h2 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">O Nosso Catálogo de Produtos Únicos</h2>
             
+            <!-- NOVO: Instrução de Seleção -->
+            <div class="text-center mb-10 p-4 bg-indigo-100/70 rounded-xl shadow-md border border-indigo-300">
+                <p class="text-lg font-semibold text-indigo-700">
+                    Selecione os artigos para mais informações ou encomenda.
+                </p>
+                <p class="text-sm text-indigo-500 mt-1">
+                    (Clique no ícone <span class="font-bold text-gray-800">+</span> no canto superior direito do cartão para adicionar/remover, ou clique no cartão para ver a imagem grande.)
+                </p>
+            </div>
+            <!-- Fim NOVO -->
+
             <!-- Mensagem de erro/loading -->
             <p id="loadingMessage" class="text-center text-xl text-gray-600 p-10">
                 A carregar produtos...
@@ -241,7 +252,6 @@
 
     <script>
         // Configurações e Estado 
-        // NOVO URL CORRETO FORNECIDO PELO UTILIZADOR
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxE6E-49awQkFyoIziyw8IVmn-oXpn3mnPb1FS0bUpxE2fVQeFWI4J1wz6WCOshGzUiyw/exec";
         
         let productCatalogue = []; // Armazena todos os produtos carregados
@@ -315,10 +325,11 @@
             if (iconElement) {
                 // Adiciona ou remove a classe 'selected' para a cor do ícone
                 iconElement.classList.toggle('selected', isSelected);
-                // Altera o SVG do ícone
+                // Altera o SVG do ícone (Checkmark ou Plus)
+                // Os ícones são ligeiramente maiores para melhor UX (w-6 h-6)
                 iconElement.innerHTML = isSelected 
-                            ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polyline points="20 6 9 17 4 12"></polyline></svg>` 
-                            : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
+                            ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><polyline points="20 6 9 17 4 12"></polyline></svg>` 
+                            : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
             }
         }
 
@@ -431,14 +442,12 @@
                     ? "Preço Indisponível" 
                     : `${priceValue.toFixed(2)} €`;
                 
-                // IMPORTANTE: REGISTO NA CONSOLA PARA DEPURAR OS DADOS BRUTOS RECEBIDOS
-                console.log(`[CATÁLOGO] Produto: ${product.Name}, Preço Bruto Recebido: "${product.Price}", Preço Formatado: ${formattedPrice}`);
-                
                 // Usa o URL do Flickr/CDN diretamente
                 const imageUrl = getDirectImageUrl(product.ImageFile);
                 
                 const card = document.createElement('div');
                 card.id = `product-card-${index}`;
+                // 'product-card' é a classe que o CSS usa para aplicar o estilo 'selected'
                 card.className = 'product-card bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1 overflow-hidden cursor-pointer flex flex-col relative border-2 border-transparent';
                 
                 // Clicar no cartão abre apenas a pré-visualização (Lightbox)
@@ -447,16 +456,18 @@
                 // Checkmark (Pisco) Overlay
                 const isSelected = (cart[index] || 0) > 0;
                 
+                // Reduzimos a altura da imagem para h-40
                 card.innerHTML = `
                     <div id="select-icon-${index}" 
                          class="absolute top-3 right-3 z-10 selection-icon ${isSelected ? 'selected' : ''}" 
-                         onclick="event.stopPropagation(); toggleSelection(${index});">
+                         onclick="event.stopPropagation(); toggleSelection(${index});"
+                         aria-label="Selecionar para encomenda">
                         ${isSelected 
-                            ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polyline points="20 6 9 17 4 12"></polyline></svg>` 
-                            : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`}
+                            ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><polyline points="20 6 9 17 4 12"></polyline></svg>` 
+                            : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`}
                     </div>
                     
-                    <div class="h-48 relative overflow-hidden">
+                    <div class="h-40 relative overflow-hidden">
                         <img src="${imageUrl}" alt="${product.Name}" 
                              class="w-full h-full object-cover transition duration-300 hover:scale-105" 
                              onerror="this.onerror=null; this.src='https://placehold.co/400x300/e0e0e0/777?text=Imagem+Indisponível'; this.parentElement.classList.add('image-fallback');">
@@ -484,8 +495,6 @@
             try {
                 const finalApiUrl = `${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`;
 
-                console.log("A solicitar catálogo na URL:", finalApiUrl);
-                
                 const response = await fetch(finalApiUrl);
 
                 if (!response.ok) {
@@ -499,6 +508,10 @@
                 }
 
                 productCatalogue = data.products || [];
+                
+                // NOVO: Organizar por ordem alfabética do nome do produto
+                productCatalogue.sort((a, b) => a.Name.localeCompare(b.Name, 'pt'));
+                
                 renderGallery(productCatalogue);
 
             } catch (error) {
@@ -529,10 +542,11 @@
             // O Apps Script Web App espera o FormData diretamente
             const formData = new FormData(elements.orderForm);
             
+            // NOTA IMPORTANTE: A lógica de envio de email para renatanaves2206@gmail.com
+            // deve ser implementada na sua função doPost do Google Apps Script (usando MailApp.sendEmail()).
+            
             try {
                 // Para o Apps Script, usamos 'no-cors' no POST com FormData. 
-                // Não conseguimos ler a resposta JSON, mas o pedido é enviado
-                // com sucesso para o Sheets se o URL estiver correto e o Apps Script estiver ativo.
                 await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: formData,
@@ -540,7 +554,7 @@
                 });
 
                 // Assumimos o sucesso após a conclusão do fetch no modo no-cors.
-                showMessage("Encomenda submetida com sucesso! Verifique o registo na sua Google Sheet.", 'success');
+                showMessage("Encomenda submetida com sucesso! O registo foi guardado e a notificação de email foi disparada (se o seu Apps Script estiver configurado).", 'success');
                 
                 // Reset do estado
                 cart = {};
