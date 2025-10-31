@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Estrela dos Desejos</title>
+    <title>Catálogo Estrela da Sorte</title>
     <!-- Carregar Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -19,6 +19,29 @@
             background-repeat: no-repeat; 
             background-attachment: fixed; 
             min-height: 100vh;
+        }
+
+        /* --- Estilos do Loader (Carregamento Inicial) --- */
+        #loaderOverlay {
+            opacity: 1;
+            pointer-events: all;
+        }
+        #loaderOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-tree {
+            width: 150px;
+            height: 150px;
+            /* Ícone de Pinheiro/Árvore de Natal (SVG simples) */
+            fill: #10B981; /* Verde esmeralda */
+            animation: pulse 1.5s infinite alternate; /* Efeito de pulsar */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
         }
 
         /* Estilo para a caixa de mensagem personalizada */
@@ -132,6 +155,17 @@
 </head>
 <body class="bg-gray-50">
 
+    <!-- ECRÃ DE CARREGAMENTO ANIMADO (LOADER) -->
+    <div id="loaderOverlay" class="fixed inset-0 bg-red-800/95 z-50 flex flex-col items-center justify-center transition-opacity duration-500">
+        <svg class="loader-tree" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <!-- Pinheiro de Natal (Tree) -->
+            <path d="M12 1L3 17h4v5h10v-5h4L12 1zm0 2.828L15.343 9h-6.686L12 3.828zM10 22v-3h4v3h-4z"/>
+        </svg>
+        <p class="text-white text-xl font-bold mt-4 animate-pulse">
+            A Carregar Catálogo...
+        </p>
+    </div>
+
     <!-- Modal Lightbox (PRÉ-VISUALIZAÇÃO SIMPLIFICADA) -->
     <div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
         <div class="relative bg-white p-6 rounded-lg max-w-4xl max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
@@ -160,8 +194,17 @@
     <!-- Header e Carrinho -->
     <header class="bg-white shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <!-- Título em Destaque -->
-            <h1 class="text-4xl md:text-5xl font-extrabold text-red-600 drop-shadow-lg transition duration-500 hover:text-red-700">Estrela dos Desejos</h1>
+            
+            <!-- LOGO DE IMAGEM E NOME "ESTRELA DA SORTE" -->
+            <div class="flex items-center space-x-3">
+                <div class="h-16 flex items-center">
+                    <img src="https://live.staticflickr.com/65535/54893023864_4910f0051e_n.jpg" 
+                         alt="Logo Estrela dos Desejos" 
+                         class="h-full w-auto object-contain rounded-lg shadow-sm">
+                </div>
+                <!-- Nome da Loja ao lado do logo -->
+                <h1 class="text-3xl font-extrabold text-gray-800 hidden sm:block">Estrela da Sorte</h1>
+            </div>
             
             <button id="viewOrderForm" class="relative bg-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-600 transition duration-300 shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -190,8 +233,8 @@
                 </p>
             </div>
 
-            <!-- Mensagem de erro/loading -->
-            <p id="loadingMessage" class="text-center text-xl text-gray-600 p-10">
+            <!-- Mensagem de erro/loading (APENAS USADA PARA EXIBIR MENSAGEM QUANDO O LOADER PRINCIPAL JÁ FOI FECHADO) -->
+            <p id="loadingMessage" class="hidden text-center text-xl text-gray-600 p-10">
                 A carregar produtos...
             </p>
             <p id="errorMessage" class="hidden text-center text-xl text-red-600 p-10 font-medium bg-red-100 rounded-lg border border-red-300">
@@ -228,7 +271,7 @@
                     <input type="hidden" id="produtosSelecionadosInput" name="produtos_selecionados" required>
                 </div>
 
-                <!-- NOVO: INFORMAÇÕES DE PAGAMENTO MBWAY -->
+                <!-- INFORMAÇÕES DE PAGAMENTO MBWAY -->
                 <div class="p-4 bg-green-50 rounded-lg border-2 border-green-300 shadow-md">
                     <div class="flex items-center space-x-3 mb-2">
                         <img src="https://whatthelogo.com/storage/logos/mbway-109591.png" alt="Logo MBWAY" class="w-16 h-auto">
@@ -311,7 +354,8 @@
             lightboxImage: document.getElementById('lightboxImage'),
             lightboxName: document.getElementById('lightboxName'),
             lightboxPrice: document.getElementById('lightboxPrice'),
-            backToCatalogue: document.getElementById('backToCatalogue')
+            backToCatalogue: document.getElementById('backToCatalogue'),
+            loaderOverlay: document.getElementById('loaderOverlay') // Adicionado o loader
         };
 
         /**
@@ -526,10 +570,9 @@
                 
                 const imageUrl = getDirectImageUrl(product.ImageFile);
                 
-                // --- NOVO DIAGNÓSTICO E LÓGICA DE VENDIDO ---
+                // --- LÓGICA DE VENDIDO ---
                 const isSold = isProductSold(product.Vendido);
-                console.log(`Produto: ${product.Name} | Valor Vendido Recebido: ${product.Vendido} (Tipo: ${typeof product.Vendido}) | Está Vendido: ${isSold}`);
-
+                
                 const card = document.createElement('div');
                 card.id = `product-card-${index}`;
                 // 'product-card' é a classe que o CSS usa para aplicar o estilo 'selected'
@@ -577,7 +620,10 @@
          * Faz a chamada GET à Apps Script para obter a lista de produtos.
          */
         async function fetchCatalogue() {
-            elements.loadingMessage.classList.remove('hidden');
+            // MOSTRA O LOADER
+            elements.loaderOverlay.classList.remove('hidden');
+
+            elements.loadingMessage.classList.remove('hidden'); // Esta é a antiga, vamos mantê-la oculta, mas a remover o 'hidden' se algo correr mal
             elements.errorMessage.classList.add('hidden');
             elements.scriptUrlDisplay.textContent = `A URL de serviço atual é: ${GOOGLE_APPS_SCRIPT_URL}`;
 
@@ -618,6 +664,8 @@
                 `;
                 elements.gallery.innerHTML = '';
             } finally {
+                // ESCONDE O LOADER
+                elements.loaderOverlay.classList.add('hidden');
                 elements.loadingMessage.classList.add('hidden');
             }
         }
@@ -659,6 +707,9 @@
                 // Alternar de volta para o catálogo
                 elements.catalogueSection.classList.remove('hidden');
                 elements.orderSection.classList.add('hidden');
+                
+                // Tenta recarregar o catálogo para verificar se o stock (Vendido) mudou
+                fetchCatalogue(); 
                 
             } catch (error) {
                 // Este catch só apanha erros de rede, não erros de lógica do Apps Script
