@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Estrela da Sorte</title>
+    <title>Catálogo Estrela da Sorte (Filtro Fixo por Código)</title>
     <!-- Carregar Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -73,20 +73,6 @@
             to {bottom: 0; opacity: 0;}
         }
 
-        /* Estilo para o Lightbox */
-        .lightbox-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: none; /* Controlado por JS */
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-        }
-
         /* Estilo para imagem de fallback */
         .image-fallback {
             display: flex;
@@ -107,6 +93,15 @@
             border: 4px solid #4f46e5; /* Indigo-600 */
             box-shadow: 0 12px 20px -5px rgba(79, 70, 229, 0.4), 0 4px 6px -2px rgba(79, 70, 229, 0.1); 
             transform: scale(1.03); /* Zoom mais proeminente */
+        }
+        
+        /* ESTILO PARA BOTÕES DE FILTRO SELECIONADOS */
+        .filter-button.active {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            border-color: #3730a3; /* Indigo-800 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
         }
 
         /* ESTILO DO ÍCONE DE SELEÇÃO */
@@ -150,6 +145,20 @@
             z-index: 20;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             border: 1px solid #dc2626; 
+        }
+
+        /* ESTILO DO LIGHTBOX */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none; /* Escondido por padrão */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
     </style>
 </head>
@@ -198,6 +207,7 @@
             <!-- LOGO DE IMAGEM E NOME "ESTRELA DA SORTE" -->
             <div class="flex items-center space-x-3">
                 <div class="h-16 flex items-center">
+                    <!-- Placeholder de Imagem para Logo -->
                     <img src="https://live.staticflickr.com/65535/54893023864_4910f0051e_n.jpg" 
                          alt="Logo Estrela dos Desejos" 
                          class="h-full w-auto object-contain rounded-lg shadow-sm">
@@ -223,6 +233,11 @@
         <section id="catalogueSection">
             <h2 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">O Nosso Catálogo de Produtos Únicos</h2>
             
+            <!-- BLOCO DE FILTROS (FILTRO FIXO POR CÓDIGO/SUBSTRING) -->
+            <div id="filterContainer" class="flex flex-wrap justify-center gap-3 mb-10 p-4 bg-indigo-50/70 rounded-xl shadow-md border border-indigo-200">
+                <!-- Botões serão injetados aqui pelo JavaScript -->
+            </div>
+
             <!-- Instrução de Seleção -->
             <div class="text-center mb-10 p-4 bg-indigo-100/70 rounded-xl shadow-md border border-indigo-300">
                 <p class="text-lg font-semibold text-indigo-700">
@@ -233,7 +248,7 @@
                 </p>
             </div>
 
-            <!-- Mensagem de erro/loading (APENAS USADA PARA EXIBIR MENSAGEM QUANDO O LOADER PRINCIPAL JÁ FOI FECHADO) -->
+            <!-- Mensagem de erro/loading -->
             <p id="loadingMessage" class="hidden text-center text-xl text-gray-600 p-10">
                 A carregar produtos...
             </p>
@@ -328,12 +343,23 @@
 
     <script>
         // Configurações e Estado 
-        // *** URL ATUALIZADA DO GOOGLE APPS SCRIPT ***
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyW3CEjhEfzjPvNmyNhiwNdxZ42O1BPXy27tSIziuLQPy4o7ZvYCznClIqVqa-eQozTcg/exec";
+        // NOVO URL DO GOOGLE APPS SCRIPT FORNECIDO PELO UTILIZADOR
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ2qAnh6Eul-Qasgc-wVfjgaqF5bsnoS8tm2Kjwt7XZ4CPZGqUlEFbZYnIIxQX-3DRyA/exec";
+        
+        // ** MAPEAMENTO DE CATEGORIAS FIXAS **
+        const FIXED_DISPLAY_CATEGORIES = [
+            'Todos', 
+            'Presépios', 
+            'Anjos', 
+            'Imans', 
+            'Pendurar', 
+            'Outros'
+        ];
         
         let productCatalogue = []; // Armazena todos os produtos carregados
         let cart = {};             // { productIndex: count, ... }
-        
+        let currentFilter = 'Todos'; // O filtro de categoria ativo
+
         // Elementos DOM
         const elements = {
             gallery: document.getElementById('productGallery'),
@@ -355,7 +381,8 @@
             lightboxName: document.getElementById('lightboxName'),
             lightboxPrice: document.getElementById('lightboxPrice'),
             backToCatalogue: document.getElementById('backToCatalogue'),
-            loaderOverlay: document.getElementById('loaderOverlay') // Adicionado o loader
+            loaderOverlay: document.getElementById('loaderOverlay'), 
+            filterContainer: document.getElementById('filterContainer')
         };
 
         /**
@@ -379,10 +406,6 @@
 
         /**
          * Tenta fazer fetch com retries e espera exponencial (backoff).
-         * Útil para Apps Scripts onde o primeiro fetch pode falhar devido a questões de rede/iframe.
-         * @param {string} url - O URL para o qual fazer fetch.
-         * @param {number} retries - Número máximo de retries.
-         * @param {number} delay - Atraso inicial em milissegundos.
          */
         async function fetchWithRetry(url, retries = 3, delay = 1000) {
             for (let i = 0; i < retries; i++) {
@@ -394,7 +417,6 @@
                 } catch (error) {
                     console.warn(`Tentativa ${i + 1} de fetch falhou: ${error.message}. A tentar novamente em breve...`);
                 }
-                // Se falhou e ainda há tentativas, espera antes de tentar novamente (backoff exponencial)
                 if (i < retries - 1) {
                     await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
                 }
@@ -404,7 +426,7 @@
 
 
         /**
-         * Simplesmente devolve o URL. Assumimos que o URL do Flickr/CDN é direto e válido para a tag <img>.
+         * Simplesmente devolve o URL.
          * @param {string} url - O URL do arquivo de imagem.
          * @returns {string} O URL inalterado.
          */
@@ -413,9 +435,7 @@
         }
 
         /**
-         * Função de verificação robusta para o estado "Vendido" (lida com boolean, "TRUE", "SIM", etc.).
-         * @param {any} value - O valor da coluna Vendido.
-         * @returns {boolean} True se o produto for considerado vendido.
+         * Função de verificação robusta para o estado "Vendido".
          */
         function isProductSold(value) {
             if (value === true) return true;
@@ -425,10 +445,29 @@
             }
             return false;
         }
+        
+        /**
+         * Determina a categoria de exibição de um produto com base no seu nome/código.
+         * Aplica as regras fixas de substring (PRES, ANJ, IMA, PEND).
+         * @param {object} product - O objeto produto (do productCatalogue).
+         * @returns {string} A categoria de exibição ("Presépios", "Anjos", etc.).
+         */
+        function getDisplayCategory(product) {
+            // Cria uma string de pesquisa combinando Name e Category (em maiúsculas)
+            // para ser robusto, caso o código esteja em qualquer um dos campos.
+            const searchString = ((product.Name || '') + ' ' + (product.Category || '')).toUpperCase().trim();
+
+            if (searchString.includes("PRES")) return "Presépios";
+            if (searchString.includes("ANJ")) return "Anjos";
+            if (searchString.includes("IMA")) return "Imans";
+            if (searchString.includes("PEND")) return "Pendurar";
+            
+            return "Outros";
+        }
+
 
         /**
          * Atualiza o estado visual de um único cartão (borda, sombra, ícone de pisco).
-         * @param {number} index - O índice do produto.
          */
         function updateCardState(index) {
             const cardElement = document.getElementById(`product-card-${index}`);
@@ -436,14 +475,11 @@
             const isSelected = (cart[index] || 0) > 0;
 
             if (cardElement) {
-                // Adiciona ou remove a classe 'selected' para a borda visual
                 cardElement.classList.toggle('selected', isSelected);
             }
 
             if (iconElement) {
-                // Adiciona ou remove a classe 'selected' para a cor do ícone
                 iconElement.classList.toggle('selected', isSelected);
-                // Altera o SVG do ícone (Checkmark ou Plus)
                 iconElement.innerHTML = isSelected 
                             ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><polyline points="20 6 9 17 4 12"></polyline></svg>` 
                             : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
@@ -458,23 +494,19 @@
             let summaryHTML = '';
             let selectedProductNames = [];
 
-            // 1. Calcular totais e construir resumo
             productCatalogue.forEach((product, index) => {
                 const count = cart[index] || 0;
                 
-                // 2. Atualizar o estado visual do cartão (IMPORTANTE)
-                updateCardState(index); 
-
                 if (count > 0) {
                     totalCount += count;
                     summaryHTML += `<p>• ${product.Name} (x${count})</p>`;
                     selectedProductNames.push(`${product.Name} (x${count})`);
                 }
             });
-
+            
+            // 2. Atualiza os elementos globais
             elements.cartCount.textContent = totalCount;
             elements.quantidadeInput.value = totalCount;
-            // Prepara a string para o Apps Script (ex: "Produto A (x1); Produto B (x2)")
             elements.produtosSelecionadosInput.value = selectedProductNames.join('; ');
             
             if (totalCount === 0) {
@@ -485,16 +517,16 @@
             }
             
             elements.selectedProductsSummary.innerHTML = summaryHTML;
+            
+            filterAndRender(); 
         }
 
         /**
          * Adiciona ou remove um item do carrinho (alternando entre 0 e 1).
-         * @param {number} productIndex - O índice do produto no array productCatalogue.
          */
         function toggleSelection(productIndex) {
             const product = productCatalogue[productIndex];
             
-            // Usar a nova função de verificação robusta
             const isSold = isProductSold(product.Vendido);
             
             if (isSold) {
@@ -511,12 +543,11 @@
                 delete cart[productIndex]; // Desseleciona (remove)
                 showMessage(`Produto ${product.Name} removido.`, 'error');
             }
-            updateCartDisplay();
+            updateCartDisplay(); 
         }
 
         /**
          * Abre o modal de lightbox com a pré-visualização.
-         * @param {number} productIndex - Índice do produto.
          */
         function openLightbox(productIndex) {
             const product = productCatalogue[productIndex];
@@ -527,7 +558,6 @@
                 ? "Preço Indisponível" 
                 : `${parseFloat(product.Price).toFixed(2)} €`;
 
-            // Usa o URL do Flickr/CDN diretamente
             const imageUrl = getDirectImageUrl(product.ImageFile);
 
             elements.lightboxImage.src = imageUrl;
@@ -551,18 +581,78 @@
         }
 
         /**
-         * Renderiza o catálogo de produtos na grelha.
+         * Define o filtro ativo e renderiza a galeria.
+         * @param {string} filterName - O nome da categoria a filtrar.
          */
-        function renderGallery(products) {
+        function setFilter(filterName) {
+            currentFilter = filterName;
+            filterAndRender();
+            
+            // Atualizar estado ativo dos botões
+            document.querySelectorAll('#filterContainer button').forEach(button => {
+                button.classList.remove('active');
+                if (button.textContent.trim() === filterName) {
+                    button.classList.add('active');
+                }
+            });
+        }
+        
+        /**
+         * Filtra o catálogo de produtos usando a função getDisplayCategory 
+         * para corresponder ao filtro fixo ativo.
+         */
+        function filterAndRender() {
+            let productsToRender;
+            
+            if (currentFilter === 'Todos') {
+                // Se o filtro for "Todos", mostra todos os produtos
+                productsToRender = productCatalogue;
+            } else {
+                // Filtra pelo nome da Categoria de Exibição (resultado da getDisplayCategory)
+                productsToRender = productCatalogue.filter(product => {
+                    return getDisplayCategory(product) === currentFilter;
+                });
+            }
+
+            renderGallery(productsToRender);
+        }
+        
+        /**
+         * Gera e renderiza os botões de filtro de categoria (usando a lista fixa).
+         */
+        function renderFilterButtons() {
+            elements.filterContainer.innerHTML = ``; // Remove o texto
+            // elements.filterContainer.innerHTML = `<p class="w-full text-center text-sm font-medium text-indigo-700 mb-2">Filtrar por Categoria (Regras Fixas):</p>`;
+
+            FIXED_DISPLAY_CATEGORIES.forEach(category => {
+                const button = document.createElement('button');
+                button.textContent = category;
+                button.className = 'filter-button bg-white text-indigo-600 border border-indigo-300 px-4 py-2 rounded-full font-semibold hover:bg-indigo-50 transition duration-150';
+                button.onclick = () => setFilter(category);
+                
+                // Marca o botão 'Todos' como ativo inicialmente, ou a categoria que estiver ativa
+                if (category === currentFilter) {
+                    button.classList.add('active');
+                }
+                
+                elements.filterContainer.appendChild(button);
+            });
+        }
+
+        /**
+         * Renderiza a lista de produtos (filtrada ou completa) na grelha.
+         */
+        function renderGallery(productsToRender) {
             elements.gallery.innerHTML = ''; // Limpa a galeria
-            if (products.length === 0) {
-                elements.gallery.innerHTML = `<p class="col-span-full text-center text-xl text-gray-500 p-10">
-                    De momento, não temos produtos disponíveis no catálogo.
+            
+            if (productsToRender.length === 0) {
+                 elements.gallery.innerHTML = `<p class="col-span-full text-center text-xl text-gray-500 p-10 bg-red-50 rounded-lg border border-red-200">
+                    Nenhum produto encontrado na categoria "${currentFilter}".
                 </p>`;
                 return;
             }
 
-            products.forEach((product, index) => {
+            productsToRender.forEach((product, index) => {
                 const priceValue = parseFloat(product.Price);
                 const formattedPrice = isNaN(priceValue) 
                     ? "Preço Indisponível" 
@@ -574,26 +664,25 @@
                 const isSold = isProductSold(product.Vendido);
                 
                 const card = document.createElement('div');
-                card.id = `product-card-${index}`;
-                // 'product-card' é a classe que o CSS usa para aplicar o estilo 'selected'
-                // Certifica-se que 'relative' está presente para o ribbon
+                // O ID do cartão deve ser sempre baseado no índice original do productCatalogue
+                const productIndex = productCatalogue.indexOf(product);
+                
+                card.id = `product-card-${productIndex}`;
                 card.className = 'product-card bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1 overflow-hidden cursor-pointer flex flex-col relative border-2 border-transparent';
                 
                 // Clicar no cartão abre apenas a pré-visualização (Lightbox)
-                card.onclick = () => openLightbox(index);
+                card.onclick = () => openLightbox(productIndex);
 
-                // Checkmark (Pisco) Overlay
-                const isSelected = (cart[index] || 0) > 0;
+                const isSelected = (cart[productIndex] || 0) > 0;
                 
-                // Reduzimos a altura da imagem para h-40
                 card.innerHTML = `
                     ${isSold ? '<div class="sold-ribbon">VENDIDO</div>' : ''}
 
-                    <div id="select-icon-${index}" 
+                    <div id="select-icon-${productIndex}" 
                          class="absolute top-3 right-3 z-10 selection-icon ${isSelected ? 'selected' : ''}" 
-                         onclick="event.stopPropagation(); toggleSelection(${index});"
+                         onclick="event.stopPropagation(); toggleSelection(${productIndex});"
                          aria-label="Selecionar para encomenda"
-                         ${isSold ? 'style="pointer-events: none; opacity: 0.5;"' : ''} > <!-- Desativa o ícone se vendido -->
+                         ${isSold ? 'style="pointer-events: none; opacity: 0.5;"' : ''} >
                         ${isSelected 
                             ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><polyline points="20 6 9 17 4 12"></polyline></svg>` 
                             : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`}
@@ -612,26 +701,22 @@
                 elements.gallery.appendChild(card);
                 
                 // Aplica o estado inicial, caso já existam itens no carrinho
-                updateCardState(index);
+                updateCardState(productIndex);
             });
         }
-
+        
         /**
          * Faz a chamada GET à Apps Script para obter a lista de produtos.
          */
         async function fetchCatalogue() {
-            // MOSTRA O LOADER
             elements.loaderOverlay.classList.remove('hidden');
 
-            elements.loadingMessage.classList.remove('hidden'); // Esta é a antiga, vamos mantê-la oculta, mas a remover o 'hidden' se algo correr mal
+            elements.loadingMessage.classList.remove('hidden');
             elements.errorMessage.classList.add('hidden');
             elements.scriptUrlDisplay.textContent = `A URL de serviço atual é: ${GOOGLE_APPS_SCRIPT_URL}`;
 
             try {
-                // Adicionamos 'action=getProducts' como parâmetro de consulta para o doGet
                 const finalApiUrl = `${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`;
-
-                // *** USAMOS FETCH COM RETRY PARA MAIOR ROBUSTEZ ***
                 const response = await fetchWithRetry(finalApiUrl);
 
                 if (!response.ok) {
@@ -644,13 +729,13 @@
                      throw new Error(`Erro do Servidor Apps Script: ${data.message}`);
                 }
 
-                // O Apps Script usa chaves 'Name', 'ImageFile', 'Price', 'Vendido' etc., que são mapeadas a partir dos cabeçalhos.
                 productCatalogue = data.products || [];
                 
-                // Organizar por ordem alfabética do nome do produto
+                // Ordenar por Nome (opcional)
                 productCatalogue.sort((a, b) => a.Name.localeCompare(b.Name, 'pt'));
                 
-                renderGallery(productCatalogue);
+                renderFilterButtons();
+                filterAndRender(); 
 
             } catch (error) {
                 console.error("Erro ao carregar o catálogo:", error);
@@ -660,11 +745,10 @@
                     <br>
                     **Erro:** ${error.message}
                     <br>
-                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">Verifique se o Apps Script foi re-publicado com o código mais recente e se o nome da folha ('Produtos') está correto.</span>
+                    <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2">A URL de Apps Script é: ${GOOGLE_APPS_SCRIPT_URL}. Se o erro persistir, verifique a permissão ('Qualquer pessoa') e o ID da folha de cálculo no Apps Script.</span>
                 `;
                 elements.gallery.innerHTML = '';
             } finally {
-                // ESCONDE O LOADER
                 elements.loaderOverlay.classList.add('hidden');
                 elements.loadingMessage.classList.add('hidden');
             }
@@ -679,40 +763,29 @@
             elements.submitButton.disabled = true;
             elements.submitButton.textContent = 'A Enviar...';
             
-            // O Apps Script Web App espera o FormData diretamente
             const formData = new FormData(elements.orderForm);
             
             // Adiciona a ação para o doPost saber o que fazer
             formData.append('action', 'submitOrder'); 
 
             try {
-                // Para o Apps Script, usamos 'no-cors' no POST com FormData. 
-                // Assumimos que o Apps Script vai processar e devolver uma resposta.
                 const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: formData,
                     mode: 'no-cors' 
                 });
-
-                // Como usamos 'no-cors', não podemos ler a resposta JSON, 
-                // mas a requisição é enviada. Assumimos sucesso.
                 
                 showMessage("Encomenda submetida com sucesso! O registo foi guardado na sua folha de cálculo.", 'success');
                 
-                // Reset do estado
                 cart = {};
-                updateCartDisplay(); // Limpa o carrinho e remove os "piscos"
                 elements.orderForm.reset();
                 
-                // Alternar de volta para o catálogo
                 elements.catalogueSection.classList.remove('hidden');
                 elements.orderSection.classList.add('hidden');
                 
-                // Tenta recarregar o catálogo para verificar se o stock (Vendido) mudou
                 fetchCatalogue(); 
                 
             } catch (error) {
-                // Este catch só apanha erros de rede, não erros de lógica do Apps Script
                 console.error("Erro na submissão da encomenda:", error);
                 showMessage("Erro ao submeter a encomenda. Tente novamente.", 'error');
             } finally {
@@ -724,22 +797,20 @@
         // --- EVENT LISTENERS ---
         
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Carregar o catálogo na inicialização
             fetchCatalogue(); 
             
-            // 2. Lógica para alternar entre catálogo e formulário
             elements.viewOrderForm.addEventListener('click', () => {
+                updateCartDisplay(); 
                 elements.catalogueSection.classList.add('hidden');
                 elements.orderSection.classList.remove('hidden');
-                updateCartDisplay(); 
             });
 
             elements.backToCatalogue.addEventListener('click', () => {
                 elements.catalogueSection.classList.remove('hidden');
                 elements.orderSection.classList.add('hidden');
+                filterAndRender(); 
             });
 
-            // 3. Submissão do formulário
             elements.orderForm.addEventListener('submit', handleOrderSubmission);
         });
 
