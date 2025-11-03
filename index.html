@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Estrela da Sorte (Cartões Quadrados & Qtd)</title>
+    <title>Catálogo Estrela da Sorte (2 Colunas Móvel)</title>
     <!-- Carregar Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -285,8 +285,8 @@
                 <span id="scriptUrlDisplay" class="text-sm text-red-500 block mt-2"></span>
             </p>
 
-            <!-- Grelha do Catálogo -->
-            <div id="productGallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Grelha do Catálogo - ATUALIZADA PARA 2 COLUNAS EM MOBILE (grid-cols-2) -->
+            <div id="productGallery" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                 <!-- Produtos serão injetados aqui pelo JavaScript -->
             </div>
         </section>
@@ -776,20 +776,20 @@
                     </div>
 
                     <div class="p-4 flex-grow flex flex-col">
-                        <h3 class="text-xl font-bold text-gray-800 mb-1">${product.Name}</h3>
+                        <h3 class="text-lg font-bold text-gray-800 mb-1 leading-tight">${product.Name}</h3>
                         
                         <div class="flex items-center justify-between space-x-2 mt-auto pt-2 border-t border-gray-100">
                             <!-- Preço -->
-                            <p class="text-xl font-extrabold text-green-600">${formattedPrice}</p>
+                            <p class="text-lg font-extrabold text-green-600">${formattedPrice}</p>
                             
                             <!-- CONTROLE DE QUANTIDADE -->
-                            <div class="flex items-stretch border border-gray-300 rounded-lg overflow-hidden h-9 w-2/3">
+                            <div class="flex items-stretch border border-gray-300 rounded-lg overflow-hidden h-8 w-2/3">
                                 
                                 <!-- Botão de Decremento -->
                                 <button 
                                     data-id="${productIndex}" 
                                     data-action="decrement"
-                                    class="qty-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 text-md font-bold transition duration-150 border-r border-gray-300 active:scale-95"
+                                    class="qty-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-6 text-sm font-bold transition duration-150 border-r border-gray-300 active:scale-95"
                                     onclick="event.stopPropagation();"
                                 >
                                     -
@@ -801,7 +801,7 @@
                                     id="qty-${productIndex}" 
                                     value="${isSelected ? currentQty : 1}" 
                                     min="1" 
-                                    class="w-full text-center text-sm font-medium text-gray-800 focus:outline-none"
+                                    class="w-full text-center text-sm font-medium text-gray-800 focus:outline-none h-8"
                                     onchange="validateQty(this, ${productIndex})"
                                     onclick="event.stopPropagation();"
                                 />
@@ -810,7 +810,7 @@
                                 <button 
                                     data-id="${productIndex}" 
                                     data-action="increment"
-                                    class="qty-btn bg-gray-100 hover:bg-gray-200 text-indigo-600 w-8 text-md font-bold transition duration-150 border-l border-gray-300 active:scale-95"
+                                    class="qty-btn bg-gray-100 hover:bg-gray-200 text-indigo-600 w-6 text-sm font-bold transition duration-150 border-l border-gray-300 active:scale-95"
                                     onclick="event.stopPropagation();"
                                 >
                                     +
